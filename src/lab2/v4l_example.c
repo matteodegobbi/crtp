@@ -25,7 +25,23 @@
 
 #include <linux/videodev2.h>
 
+#include <aalib.h>
+
+
+
+
+
+  
+
+
+
+
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
+
+static const int FRAME_width = 640;
+static const int FRAME_height = 480;
+aa_context *FRAME_context = NULL;
 
 enum io_method {
         IO_METHOD_READ,
@@ -43,7 +59,7 @@ static enum io_method   io = IO_METHOD_MMAP;
 static int              fd = -1;
 struct buffer          *buffers;
 static unsigned int     n_buffers;
-static int              out_buf;
+static int              out_buf=0, aa_buf=0;
 static int              force_format;
 static int              frame_count = 70;
 
@@ -64,10 +80,53 @@ static int xioctl(int fh, int request, void *arg)
         return r;
 }
 
+
+aa_context *aa_create_framebuffer()
+{
+    int i;
+    aa_context *context; /* The information about currently initialized device. */
+    aa_palette palette; /* Emulated palette (optional) */
+    // char *framebuffer;
+
+    aa_defparams.width = FRAME_width;
+    aa_defparams.height = FRAME_height;
+
+    /* Initialize output driver. */
+    context = aa_autoinit (&aa_defparams);
+    if (context == NULL)
+    {
+        printf ("Failed to initialize aalib\n");
+        exit (1);
+    }
+
+    // aa_renderpalette (context, palette, &aa_defrenderparams,
+    // /* Top left conner of rendered area: */ 0, 0,
+    // /* Bottom right */ aa_scrwidth (context), aa_scrheight (context));
+
+    /* If you don't use palette use following function: */
+    aa_render (context, &aa_defrenderparams,
+    0, 0, aa_scrwidth (context), aa_scrheight (context));
+
+    /* And make it visible: */
+    aa_flush (context);
+
+    return context;
+}
+
+
 static void process_image(const void *p, int size)
 {
         if (out_buf)
                 fwrite(p, size, 1, stdout);
+
+        else if (aa_buf) {
+                unsigned char *bitmap = (unsigned char*)aa_image(FRAME_context);
+	        unsigned char *src = (unsigned char*)p;
+	        //unsigned char* dst = malloc(FRAME_width*FRAME_height*sizeof(char));
+	        //YUV420toGRAY(FRAME_width, FRAME_height, src, bitmap);
+                memcpy(bitmap,src,size);
+                aa_flush (FRAME_context);
+        }
 
         fflush(stderr);
         fprintf(stderr, ".");
@@ -483,9 +542,11 @@ static void init_device(void)
 
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (force_format) {
-                fmt.fmt.pix.width       = 640;
-                fmt.fmt.pix.height      = 480;
-                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+                fmt.fmt.pix.width       = FRAME_width;
+                fmt.fmt.pix.height      = FRAME_height;
+                // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+                // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
+                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_GREY;
                 fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
                 if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
@@ -565,13 +626,14 @@ static void usage(FILE *fp, int argc, char **argv)
                  "-r | --read          Use read() callsn"
                  "-u | --userp         Use application allocated buffersn"
                  "-o | --output        Outputs stream to stdoutn"
+                 "-a | --aalib         Outputs stream to aalib"
                  "-f | --format        Force format to 640x480 YUYVn"
                  "-c | --count         Number of frames to grab [%i]n"
                  "",
                  argv[0], dev_name, frame_count);
 }
 
-static const char short_options[] = "d:hmruofc:";
+static const char short_options[] = "d:hmruoafc:";
 
 static const struct option
 long_options[] = {
@@ -581,9 +643,10 @@ long_options[] = {
         { "read",   no_argument,       NULL, 'r' },
         { "userp",  no_argument,       NULL, 'u' },
         { "output", no_argument,       NULL, 'o' },
+        { "aalib",  no_argument,       NULL, 'a' },
         { "format", no_argument,       NULL, 'f' },
         { "count",  required_argument, NULL, 'c' },
-        { 0, 0, 0, 0 }
+        { 0, 0, 0 }
 };
 
 int main(int argc, char **argv)
@@ -628,6 +691,11 @@ int main(int argc, char **argv)
                         out_buf++;
                         break;
 
+                case 'a':
+                        FRAME_context = aa_create_framebuffer();
+                        aa_buf++;
+                        break;
+
                 case 'f':
                         force_format++;
                         break;
@@ -652,6 +720,7 @@ int main(int argc, char **argv)
         stop_capturing();
         uninit_device();
         close_device();
+        if (FRAME_context) aa_close(FRAME_context);
         fprintf(stderr, "\\n");
         return 0;
 }
