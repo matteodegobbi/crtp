@@ -29,8 +29,7 @@
 
 
 
-
-
+#include "image_process.h"
   
 
 
@@ -133,27 +132,23 @@ aa_context *aa_create_framebuffer()
 typedef char PIXEL;
 
 
-static void ScaleImage(PIXEL *dst, PIXEL *src, int SrcWidth, int SrcHeight, int TgtWidth, int TgtHeight)
-{
-  int x, y, x2, y2;
-  int sw, sh, dw, dh;
-  PIXEL p;
-
-}
-
-
-
-
 
 static void process_image(const void *p, int size)
 {
+
+        unsigned char *buffer = (unsigned char *)malloc(size);
+        if(!buffer) exit(1);
+        
+        makeBorder((unsigned char *)p, buffer, FRAME_width, FRAME_height);
+
         if (out_buf)
                 fwrite(p, size, 1, stdout);
 
         if (aa_buf) {
                 unsigned char *bitmap = (unsigned char*)aa_image(FRAME_context);
-	        unsigned char *src = (unsigned char*)p;
-	        //unsigned char* dst = malloc(FRAME_width*FRAME_height*sizeof(char));
+	        unsigned char *src = (unsigned char*)buffer;
+	        
+                //unsigned char* dst = malloc(FRAME_width*FRAME_height*sizeof(char));
 	        //YUV420toGRAY(FRAME_width, FRAME_height, src, bitmap);
                 aa_context *ctx = FRAME_context;
 
@@ -169,7 +164,7 @@ static void process_image(const void *p, int size)
                 }
 
                 aa_render ( ctx, &aa_defrenderparams, 0, 0, aa_imgwidth(ctx), aa_imgheight(ctx) );
-                aa_flush  ( FRAME_context );
+                aa_flush  ( FRAME_context );                
         }
 
         if(out_buf | aa_buf == 0) {
@@ -177,6 +172,9 @@ static void process_image(const void *p, int size)
                 fprintf(stderr, ".");
                 fflush(stdout);
         }
+
+        free(buffer);
+
 }
 
 static int read_frame(void)
