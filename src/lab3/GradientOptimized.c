@@ -1,8 +1,10 @@
-void makeBorder(char *image, char *border, int cols, int rows)
+
+#define THRESHOLD 100
+void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
 {
     int x, y, sumX, sumY, sum;
-/* Variables to hold the 3x3 portion of the image used in the computation
-of the Sobel filter output */
+    /* Variables to hold the 3x3 portion of the image used in the computation
+       of the Sobel filter output */
     int c11,c12,c13,c21,c22,c23,c31,c32,c33;
 
     for(y = 0; y <= (rows-1); y++)
@@ -85,7 +87,7 @@ of the Sobel filter output */
             if(sum > 255) sum = 255;
             if(sum < THRESHOLD) sum=0;
 /* Report the new pixel in the output image */
-            *(border + x + y*cols) = 255 - (unsigned char)(sum);
+            *(border + x + y*cols) = (unsigned char)(sum);
         }
     }
 }
