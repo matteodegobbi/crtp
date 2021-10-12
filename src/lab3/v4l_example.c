@@ -23,10 +23,12 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
+#include <stdint.h>
+
 #include <linux/videodev2.h>
 
 #include <aalib.h>
-
+#include "render_sdl2.h"
 
 
 #include "image_process.h"
@@ -38,8 +40,8 @@
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
-static const int FRAME_width = 640;
-static const int FRAME_height = 480;
+static int FRAME_width = 640;
+static int FRAME_height = 480;
 aa_context *FRAME_context = NULL;
 
 enum io_method {
@@ -58,9 +60,30 @@ static enum io_method   io = IO_METHOD_MMAP;
 static int              fd = -1;
 struct buffer          *buffers;
 static unsigned int     n_buffers;
-static int              out_buf=0, aa_buf=0;
+static int              out_buf=0, aa_buf=0, sdl_buf=0;
 static int              force_format;
-static int              frame_count = 700;
+static int              frame_count = 70;
+
+static uint8_t * grey_buffer1 = NULL;
+static uint8_t * grey_buffer2 = NULL;
+static int grey_w, grey_h;
+static uint8_t xbytestep;
+static uint8_t ybytestep;
+static int vbytesperline;
+
+
+// YUYV to GREY conversion //
+void YUV422_to_grey(unsigned char *src, unsigned char *dst) {    
+    int x,y;
+    for(y=0; y<grey_h; ++y) {
+        for(x=0; x<grey_w; ++x ){
+            *(dst++) = *src;
+            src += xbytestep;
+        }
+        src += ybytestep;
+    }
+}
+
 
 static void errno_exit(const char *s)
 {
@@ -136,19 +159,26 @@ typedef char PIXEL;
 static void process_image(const void *p, int size)
 {
 
-        unsigned char *buffer = (unsigned char *)malloc(size);
-        if(!buffer) exit(1);
-        
-        makeBorder((unsigned char *)p, buffer, FRAME_width, FRAME_height);
+        uint8_t * buf1 = grey_buffer1;
+        uint8_t * buf2 = grey_buffer2;
+                
+        YUV422_to_grey(p, (unsigned char *)buf1);
+        // makeBorder(buf1, buf2, FRAME_width, FRAME_height);
+
+        int radius = 30;
+        int rows = FRAME_width, cols = FRAME_height;
+        int retX,retY,retMax;
+
+        // findCenter(radius, buf2, rows, cols, &retX, &retY, &retMax, buf2);
+        // printf("c:[%d,%d]\n",retX,retY);
 
         if (out_buf)
                 fwrite(p, size, 1, stdout);
 
         if (aa_buf) {
-                unsigned char *bitmap = (unsigned char*)aa_image(FRAME_context);
-	        unsigned char *src = (unsigned char*)buffer;
+	        unsigned char *src = (unsigned char*)buf1;
+                unsigned char *dst = (unsigned char*)aa_image(FRAME_context);
 	        
-                //unsigned char* dst = malloc(FRAME_width*FRAME_height*sizeof(char));
 	        //YUV420toGRAY(FRAME_width, FRAME_height, src, bitmap);
                 aa_context *ctx = FRAME_context;
 
@@ -157,14 +187,17 @@ static void process_image(const void *p, int size)
                 int size_y = aa_imgheight(ctx);
 
                 // memcpy(bitmap,src,size);
-                // ScaleMinifyByTwo(bitmap, src, FRAME_width, FRAME_height);
-
                 for (int y=0; y<size_y; ++y) {
-                        memcpy(&bitmap[y*size_x], &src[y*FRAME_width], size_x);
+                        memcpy(&dst[y*size_x], &src[y*FRAME_width], size_x);
                 }
 
                 aa_render ( ctx, &aa_defrenderparams, 0, 0, aa_imgwidth(ctx), aa_imgheight(ctx) );
                 aa_flush  ( FRAME_context );                
+        }
+
+        if(sdl_buf) {
+                render_sdl2_frame((uint8_t*)p, FRAME_width, FRAME_height);
+
         }
 
         if(out_buf | aa_buf == 0) {
@@ -173,7 +206,6 @@ static void process_image(const void *p, int size)
                 fflush(stdout);
         }
 
-        free(buffer);
 
 }
 
@@ -588,15 +620,17 @@ static void init_device(void)
         if (force_format) {
                 fmt.fmt.pix.width       = FRAME_width;
                 fmt.fmt.pix.height      = FRAME_height;
-                // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV; // YUV422
                 // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
-                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_GREY;
+                // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_GREY;
                 fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+                
 
                 if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
                         errno_exit("VIDIOC_S_FMT");
 
                 /* Note VIDIOC_S_FMT may change width and height. */
+
         } else {
                 /* Preserve original settings as set by v4l2-ctl for example */
                 if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
@@ -604,12 +638,12 @@ static void init_device(void)
         }
 
         /* Buggy driver paranoia. */
-        min = fmt.fmt.pix.width * 2;
-        if (fmt.fmt.pix.bytesperline < min)
-                fmt.fmt.pix.bytesperline = min;
-        min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-        if (fmt.fmt.pix.sizeimage < min)
-                fmt.fmt.pix.sizeimage = min;
+        // min = fmt.fmt.pix.width * 2;
+        // if (fmt.fmt.pix.bytesperline < min)
+        //         fmt.fmt.pix.bytesperline = min;
+        // min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+        // if (fmt.fmt.pix.sizeimage < min)
+        //         fmt.fmt.pix.sizeimage = min;
 
         switch (io) {
         case IO_METHOD_READ:
@@ -624,6 +658,40 @@ static void init_device(void)
                 init_userp(fmt.fmt.pix.sizeimage);
                 break;
         }
+
+        FRAME_width  = fmt.fmt.pix.width;
+        FRAME_height = fmt.fmt.pix.height;
+        printf("[%dx%d]\n", FRAME_width, FRAME_height);
+        vbytesperline = fmt.fmt.pix.bytesperline;
+        
+        int xstep=0, ystep=0;
+        if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+                xstep = 2;
+                ystep = 4;
+        }
+        else {
+                perror("We only support YUYV formay (try -f flag)\n");
+                errno_exit("VIDIOC_S_FMT");
+        }
+
+        xbytestep = xstep + xstep; // for YUV422. for other formats may differ
+        ybytestep = vbytesperline * (ystep-1);
+        // we shrink our pixels crudely, by hopping over them:
+        grey_w = FRAME_width / xstep;
+        grey_h = FRAME_height / ystep;
+        // aalib converts every block of 4 pixels to one character, so our sizes shrink by 2:
+        // aw = gw / 2;
+        // ah = gh / 2;
+    
+        int grey_size = grey_w * grey_h;
+
+        /* ALLOCATE FLITER BUFFERS */
+        grey_buffer1 = (uint8_t*)malloc(grey_size);
+        grey_buffer2 = (uint8_t*)malloc(grey_size);
+
+        if(sdl_buf) 
+          init_render_sdl2(FRAME_width, FRAME_height, 0);
+
 }
 
 static void close_device(void)
@@ -632,6 +700,10 @@ static void close_device(void)
                 errno_exit("close");
 
         fd = -1;
+
+        if (grey_buffer1) free(grey_buffer1);
+        if (grey_buffer2) free(grey_buffer2);
+        if (sdl_buf) render_sdl2_clean();
 }
 
 static void open_device(void)
@@ -671,13 +743,14 @@ static void usage(FILE *fp, int argc, char **argv)
                  "-u | --userp         Use application allocated buffersn"
                  "-o | --output        Outputs stream to stdoutn"
                  "-a | --aalib         Outputs stream to aalib"
+                 "-s | --sdl2          Outputs stream to sdl2"
                  "-f | --format        Force format to 640x480 YUYVn"
                  "-c | --count         Number of frames to grab [%i]n"
                  "",
                  argv[0], dev_name, frame_count);
 }
 
-static const char short_options[] = "d:hmruoafc:";
+static const char short_options[] = "d:hmruoasfc:";
 
 static const struct option
 long_options[] = {
@@ -688,6 +761,7 @@ long_options[] = {
         { "userp",  no_argument,       NULL, 'u' },
         { "output", no_argument,       NULL, 'o' },
         { "aalib",  no_argument,       NULL, 'a' },
+        { "sdl2",   no_argument,       NULL, 's' },
         { "format", no_argument,       NULL, 'f' },
         { "count",  required_argument, NULL, 'c' },
         { 0, 0, 0 }
@@ -738,6 +812,12 @@ int main(int argc, char **argv)
                 case 'a':
                         FRAME_context = aa_create_framebuffer();
                         aa_buf++;
+                        break;
+
+                case 's':
+                        
+                        // render_sdl2_clean();
+                        sdl_buf++;
                         break;
 
                 case 'f':

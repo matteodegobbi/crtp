@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#define THRESHOLD 130
+#define THRESHOLD 120
 /* Sobel matrixes */
 static const int GX[3][3] = { 
         -1, 0, 1,
@@ -14,8 +14,11 @@ static const int GY[3][3] = {
     };
 
 
+
+#define abs(x) ((x>0)?x:-x)
+
 /* Sobel Filter computation for Edge detection. */
-void makeBorder(char *image, char *border, int cols, int rows)
+void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
 /* Input image is passed in the byte array image (cols x rows pixels)
    Filtered image is returned in byte array border */
 {
@@ -45,7 +48,7 @@ void makeBorder(char *image, char *border, int cols, int rows)
                         sumY += (int)( image [ x + i + (y + j)*cols] * GY[i+1][j+1]);
                 
                 /* Gradient Magnitude approximation to avoid square root operations */
-                sum = abs(sumX) + abs(sumY);
+                sum = (abs(sumX) + abs(sumY));
             }
 
             if(sum > 255) sum = 255;
@@ -54,3 +57,5 @@ void makeBorder(char *image, char *border, int cols, int rows)
         }
     }
 }
+
+#undef abs
