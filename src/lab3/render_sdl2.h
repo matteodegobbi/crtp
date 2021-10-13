@@ -56,7 +56,7 @@ int init_render_sdl2(int width, int height, int flags);
  *
  * returns: error code
  */
-int render_sdl2_frame(uint8_t *frame, int width, int height);
+int render_sdl2_frame(uint8_t *frame, int pitch);
 
 /*
  * set sdl1 render caption
@@ -94,5 +94,13 @@ void render_sdl2_dispatch_events();
  */
 void render_sdl2_clean();
 
+
+
+int decode_sdl2_mjpeg_frame(uint8_t *src, uint8_t *dst, size_t size);
+
+
+int RGB24_to_GREY(uint8_t *src, uint8_t *dst, int imgsize);
+
+int GREY_to_RGB24(uint8_t *src, uint8_t *dst, int imgsize);
 
 #endif
