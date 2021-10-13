@@ -4,7 +4,7 @@
 /* Black threshold:
    a pixel value less than the threshold is considered black. */
 #define BLACK_LIMIT 10
-#define MAX_RADIUS 100
+#define MAX_RADIUS 200
 
 void findCenter(int radius,unsigned char *buf, int rows, int cols,
     int *retX, int *retY, int *retMax, unsigned char *map)

@@ -1,6 +1,7 @@
 
-#define THRESHOLD 100
-void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
+static inline int _abs(int x) { return (x>0)?x:-x; }
+
+void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows, int threshold)
 {
     int x, y, sumX, sumY, sum;
     /* Variables to hold the 3x3 portion of the image used in the computation
@@ -63,9 +64,9 @@ void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
                 sumY = sumY - 2*c32;
                 sumX = sumX + c33;
                 sumY = sumY - c33;
-                if(sumX < 0) sumX = -sumX; //Abs value
-                if(sumY < 0) sumY = -sumY;
-                sum = sumX + sumY;
+                // if(sumX < 0) sumX = -sumX; //Abs value
+                // if(sumY < 0) sumY = -sumY;
+                sum = _abs(sumX) + _abs(sumY);
             }
 /* Move one pixel on the right in the current row.
    Update the first/last row only if not in the first/last image row */
@@ -84,8 +85,9 @@ void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
                 c32 = c33;
                 c33 = *(image + x + 2 + (y + 1) * cols);
             }
+            
             if(sum > 255) sum = 255;
-            if(sum < THRESHOLD) sum=0;
+            if(sum < threshold) sum=0;
 /* Report the new pixel in the output image */
             *(border + x + y*cols) = (unsigned char)(sum);
         }

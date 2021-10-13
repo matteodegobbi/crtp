@@ -24,6 +24,8 @@
 ********************************************************************************/
 
 #include <SDL.h>
+#include "SDL_image.h"
+
 #include <assert.h>
 #include <math.h>
 
@@ -33,12 +35,16 @@
 #include "render_sdl2.h"
 //#include "../config.h"
 
+
+
+
+
 int verbosity = 9;
 
 SDL_DisplayMode display_mode;
 
 static SDL_Window*  sdl_window = NULL;
-static SDL_Texture* rending_texture = NULL;
+static SDL_Texture* rendering_texture = NULL;
 static SDL_Renderer*  main_renderer = NULL;
 
 /*
@@ -215,13 +221,14 @@ static int video_init(int width, int height, int flags)
 	SDL_SetRenderDrawBlendMode(main_renderer, SDL_BLENDMODE_NONE);
 
 
-    rending_texture = SDL_CreateTexture(main_renderer,
-		SDL_PIXELFORMAT_YUY2,  /*yuv422*/
+    rendering_texture = SDL_CreateTexture(main_renderer,
+		SDL_PIXELFORMAT_RGB24, 
 		SDL_TEXTUREACCESS_STREAMING,
 		width,
 		height);
 
-	if(rending_texture == NULL)
+
+	if(rendering_texture == NULL)
 	{
 		fprintf(stderr, "RENDER: (SDL2) Couldn't get a texture for rending: %s\n", SDL_GetError());
 		render_sdl2_clean();
@@ -255,7 +262,7 @@ static int video_init(int width, int height, int flags)
 		return -1;
 	}
 
-	assert(rending_texture != NULL);
+	assert(rendering_texture != NULL);
 
 	return 0;
  }
@@ -273,10 +280,10 @@ static int video_init(int width, int height, int flags)
  *
  * returns: error code
  */
-int render_sdl2_frame(uint8_t *frame, int width, int height)
+int render_sdl2_frame(uint8_t *frame, int pitch)
 {
 	/*asserts*/
-	assert(rending_texture != NULL);
+	assert(rendering_texture != NULL);
 	assert(frame != NULL);
 
 	SDL_SetRenderDrawColor(main_renderer, 0, 0, 0, 255); /*black*/
@@ -286,9 +293,9 @@ int render_sdl2_frame(uint8_t *frame, int width, int height)
 	 * instead of SDL_UpdateYUVTexture.
 	 * no need to use SDL_Lock/UnlockTexture (it doesn't seem faster)
 	 */
-	SDL_UpdateTexture(rending_texture, NULL, frame, width);
+	SDL_UpdateTexture(rendering_texture, NULL, frame, pitch);
 
-	SDL_RenderCopy(main_renderer, rending_texture, NULL, NULL);
+	SDL_RenderCopy(main_renderer, rendering_texture, NULL, NULL);
 
 	SDL_RenderPresent(main_renderer);
 
@@ -397,10 +404,10 @@ void render_sdl2_dispatch_events()
  */
 void render_sdl2_clean()
 {
-	if(rending_texture)
-		SDL_DestroyTexture(rending_texture);
+	if(rendering_texture)
+		SDL_DestroyTexture(rendering_texture);
 
-	rending_texture = NULL;
+	rendering_texture = NULL;
 
 	if(main_renderer)
 		SDL_DestroyRenderer(main_renderer);
@@ -414,3 +421,76 @@ void render_sdl2_clean()
 
 	SDL_Quit();
 }
+
+
+
+
+
+
+
+
+int decode_sdl2_mjpeg_frame(uint8_t *src, uint8_t *dst, size_t size) {
+    
+    // printf("start converting frame\n");
+    SDL_RWops *buffer_stream = SDL_RWFromMem(src, size);
+    SDL_Surface *frame = IMG_LoadJPG_RW(buffer_stream);
+    if(!frame) {
+        perror("problem reading jpg image from memory\n");
+        exit(1);
+    }
+    
+    if( frame->format->format != SDL_PIXELFORMAT_RGB24 )
+        {
+            perror("Wrong image format in JPG");
+            exit(1);
+        }
+
+    // SDL_PixelFormat *fmt = SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
+    // if(!fmt) {
+    //     perror("problem creating SDL format\n");
+    //     printf("SDL: %s\n", SDL_GetError());
+    //     exit(1);
+    // }
+
+    // SDL_Surface *frame2 = SDL_ConvertSurface(frame1, fmt, 0);
+    // SDL_FreeSurface(frame1);
+    
+    int img_bytes = frame->h*frame->pitch;    
+    memcpy(dst, frame->pixels, img_bytes);
+
+    SDL_FreeSurface(frame);
+    // SDL_FreeRW(buffer_stream);
+    // SDL_FreeFormat(fmt);
+    
+    // printf("image read\n");
+    return img_bytes;
+}
+
+
+int RGB24_to_GREY(uint8_t *src, uint8_t *dst, int imgsize) {
+    int8_t src_pixw = sizeof(char)*3;
+    int8_t dst_pixw = sizeof(char);
+    int32_t si, di;
+    for(si=0, di=0; si < imgsize*src_pixw;) {        
+        register int R = src[si];
+        register int G = src[si+1];
+        register int B = src[si+2];
+        dst[di] = (R+R+R+B+G+G+G+G)>>3;
+        si += src_pixw;
+        di += dst_pixw;
+    }
+    return di;
+}
+
+int GREY_to_RGB24(uint8_t *src, uint8_t *dst, int imgsize) {
+    int8_t src_pixw = sizeof(char);
+    int8_t dst_pixw = sizeof(char)*3;
+    int32_t si, di;
+    for(si=0, di=0; si < imgsize*src_pixw;) {
+        dst[di] = dst[di+1] = dst[di+2] = src[si];
+        si += src_pixw;
+        di += dst_pixw;
+    }
+    return di;
+}
+

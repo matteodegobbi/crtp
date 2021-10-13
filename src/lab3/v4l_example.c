@@ -62,27 +62,28 @@ struct buffer          *buffers;
 static unsigned int     n_buffers;
 static int              out_buf=0, aa_buf=0, sdl_buf=0;
 static int              force_format;
-static int              frame_count = 70;
+static int              frame_count = 140;
+
+struct v4l2_format v4l_format;
 
 static uint8_t * grey_buffer1 = NULL;
 static uint8_t * grey_buffer2 = NULL;
-static int grey_w, grey_h;
-static uint8_t xbytestep;
-static uint8_t ybytestep;
-static int vbytesperline;
+static uint8_t * grey_buffer3 = NULL;
 
 
 // YUYV to GREY conversion //
-void YUV422_to_grey(unsigned char *src, unsigned char *dst) {    
-    int x,y;
-    for(y=0; y<grey_h; ++y) {
-        for(x=0; x<grey_w; ++x ){
-            *(dst++) = *src;
-            src += xbytestep;
-        }
-        src += ybytestep;
-    }
-}
+// void YUV422_to_grey(unsigned char *src, unsigned char *dst) {    
+//     int x,y;
+//     for(y=0; y<grey_h; ++y) {
+//         for(x=0; x<grey_w; ++x ){
+//             *(dst++) = *src;
+//             src += xbytestep;
+//         }
+//         src += ybytestep;
+//     }
+// }
+
+
 
 
 static void errno_exit(const char *s)
@@ -156,24 +157,37 @@ typedef char PIXEL;
 
 
 
-static void process_image(const void *p, int size)
+static void process_image(const void *p, int size_bytes)
 {
 
+        uint8_t * buf0 = malloc(sizeof(char)*v4l_format.fmt.pix.sizeimage*3);
         uint8_t * buf1 = grey_buffer1;
         uint8_t * buf2 = grey_buffer2;
-                
-        YUV422_to_grey(p, (unsigned char *)buf1);
-        // makeBorder(buf1, buf2, FRAME_width, FRAME_height);
+        uint8_t * buf3 = grey_buffer3;
 
-        int radius = 30;
-        int rows = FRAME_width, cols = FRAME_height;
+        int img_size = FRAME_height*FRAME_width;
+        
+
+        // if (v4l_format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+        //         printf("image format is YUYV\n");
+        // }
+        if (v4l_format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {        
+                size_bytes = decode_sdl2_mjpeg_frame((uint8_t*)p, buf0, size_bytes);
+                size_bytes = RGB24_to_GREY(buf0, buf1, img_size);
+        }
+        
+
+        // YUV422_to_grey(p, (unsigned char *)buf1);
+        makeBorder(buf1, buf2, FRAME_width, FRAME_height, 150);
+
+        int radius = 20;
         int retX,retY,retMax;
 
-        // findCenter(radius, buf2, rows, cols, &retX, &retY, &retMax, buf2);
-        // printf("c:[%d,%d]\n",retX,retY);
+        findCenter(radius, buf2, FRAME_width, FRAME_height, &retX, &retY, &retMax, buf3);
+        printf("c:[%d,%d] ~ %d      \r",retX, retY, retMax);
 
         if (out_buf)
-                fwrite(p, size, 1, stdout);
+                fwrite(p, size_bytes, 1, stdout);
 
         if (aa_buf) {
 	        unsigned char *src = (unsigned char*)buf1;
@@ -196,8 +210,9 @@ static void process_image(const void *p, int size)
         }
 
         if(sdl_buf) {
-                render_sdl2_frame((uint8_t*)p, FRAME_width, FRAME_height);
-
+                GREY_to_RGB24(buf2, buf0, img_size);
+                int pitch = v4l_format.fmt.pix.width * sizeof(char) * 3;
+                render_sdl2_frame(buf0, pitch );
         }
 
         if(out_buf | aa_buf == 0) {
@@ -206,7 +221,7 @@ static void process_image(const void *p, int size)
                 fflush(stdout);
         }
 
-
+        free(buf0);
 }
 
 static int read_frame(void)
@@ -406,29 +421,6 @@ static void start_capturing(void)
         }
 }
 
-static void uninit_device(void)
-{
-        unsigned int i;
-
-        switch (io) {
-        case IO_METHOD_READ:
-                free(buffers[0].start);
-                break;
-
-        case IO_METHOD_MMAP:
-                for (i = 0; i < n_buffers; ++i)
-                        if (-1 == munmap(buffers[i].start, buffers[i].length))
-                                errno_exit("munmap");
-                break;
-
-        case IO_METHOD_USERPTR:
-                for (i = 0; i < n_buffers; ++i)
-                        free(buffers[i].start);
-                break;
-        }
-
-        free(buffers);
-}
 
 static void init_read(unsigned int buffer_size)
 {
@@ -620,12 +612,12 @@ static void init_device(void)
         if (force_format) {
                 fmt.fmt.pix.width       = FRAME_width;
                 fmt.fmt.pix.height      = FRAME_height;
-                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV; // YUV422
+                // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV; // YUV422
+                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
                 // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
                 // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_GREY;
                 fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
                 
-
                 if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
                         errno_exit("VIDIOC_S_FMT");
 
@@ -638,12 +630,12 @@ static void init_device(void)
         }
 
         /* Buggy driver paranoia. */
-        // min = fmt.fmt.pix.width * 2;
-        // if (fmt.fmt.pix.bytesperline < min)
-        //         fmt.fmt.pix.bytesperline = min;
-        // min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-        // if (fmt.fmt.pix.sizeimage < min)
-        //         fmt.fmt.pix.sizeimage = min;
+        min = fmt.fmt.pix.width * 2;
+        if (fmt.fmt.pix.bytesperline < min)
+                fmt.fmt.pix.bytesperline = min;
+        min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+        if (fmt.fmt.pix.sizeimage < min)
+                fmt.fmt.pix.sizeimage = min;
 
         switch (io) {
         case IO_METHOD_READ:
@@ -662,49 +654,76 @@ static void init_device(void)
         FRAME_width  = fmt.fmt.pix.width;
         FRAME_height = fmt.fmt.pix.height;
         printf("[%dx%d]\n", FRAME_width, FRAME_height);
-        vbytesperline = fmt.fmt.pix.bytesperline;
+        
         
         int xstep=0, ystep=0;
-        if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+
+        switch (fmt.fmt.pix.pixelformat)
+        {
+        case V4L2_PIX_FMT_YUYV:
+        case V4L2_PIX_FMT_MJPEG:
                 xstep = 2;
                 ystep = 4;
-        }
-        else {
-                perror("We only support YUYV formay (try -f flag)\n");
+                break;
+                
+        
+        default:
+                perror("Format of the camera is not supported\n");
                 errno_exit("VIDIOC_S_FMT");
+                break;
         }
 
-        xbytestep = xstep + xstep; // for YUV422. for other formats may differ
-        ybytestep = vbytesperline * (ystep-1);
+
+        // xbytestep = xstep + xstep; // for YUV422. for other formats may differ
+        // ybytestep = fmt.fmt.pix.bytesperline * (ystep-1);
         // we shrink our pixels crudely, by hopping over them:
-        grey_w = FRAME_width / xstep;
-        grey_h = FRAME_height / ystep;
         // aalib converts every block of 4 pixels to one character, so our sizes shrink by 2:
         // aw = gw / 2;
         // ah = gh / 2;
     
-        int grey_size = grey_w * grey_h;
+        int grey_size = FRAME_width * FRAME_height * sizeof(char);
 
         /* ALLOCATE FLITER BUFFERS */
         grey_buffer1 = (uint8_t*)malloc(grey_size);
         grey_buffer2 = (uint8_t*)malloc(grey_size);
+        grey_buffer3 = (uint8_t*)malloc(grey_size);
 
         if(sdl_buf) 
           init_render_sdl2(FRAME_width, FRAME_height, 0);
 
+
+        v4l_format = fmt;
 }
 
-static void close_device(void)
+static void uninit_device(void)
 {
-        if (-1 == close(fd))
-                errno_exit("close");
+        unsigned int i;
 
-        fd = -1;
+        switch (io) {
+        case IO_METHOD_READ:
+                free(buffers[0].start);
+                break;
 
+        case IO_METHOD_MMAP:
+                for (i = 0; i < n_buffers; ++i)
+                        if (-1 == munmap(buffers[i].start, buffers[i].length))
+                                errno_exit("munmap");
+                break;
+
+        case IO_METHOD_USERPTR:
+                for (i = 0; i < n_buffers; ++i)
+                        free(buffers[i].start);
+                break;
+        }
+
+        free(buffers);
+        
         if (grey_buffer1) free(grey_buffer1);
         if (grey_buffer2) free(grey_buffer2);
+        if (grey_buffer2) free(grey_buffer3);
         if (sdl_buf) render_sdl2_clean();
 }
+
 
 static void open_device(void)
 {
@@ -729,6 +748,15 @@ static void open_device(void)
                 exit(EXIT_FAILURE);
         }
 }
+
+static void close_device(void)
+{
+        if (-1 == close(fd))
+                errno_exit("close");
+
+        fd = -1;
+}
+
 
 static void usage(FILE *fp, int argc, char **argv)
 {

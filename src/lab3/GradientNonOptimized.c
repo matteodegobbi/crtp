@@ -7,6 +7,7 @@ static const int GX[3][3] = {
         -1, 0, 2,
         -1, 0, 1
     };
+    
 static const int GY[3][3] = { 
          1,  2,  1,
          0,  0,  0,
@@ -15,10 +16,10 @@ static const int GY[3][3] = {
 
 
 
-#define abs(x) ((x>0)?x:-x)
+static inline int _abs(int x) { return (x>0)?x:-x; }
 
 /* Sobel Filter computation for Edge detection. */
-void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
+void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows, int threshold)
 /* Input image is passed in the byte array image (cols x rows pixels)
    Filtered image is returned in byte array border */
 {
@@ -40,22 +41,21 @@ void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows)
                 /* X Gradient */
                 for(i = -1; i <= 1; i++)
                     for(j =- 1; j <= 1; j++)
-                        sumX += (int)( image [ x + i + (y + j)*cols] * GX[i+1][j+1]);
+                        sumX += (int)(image [ x + i + (y + j)*cols]) * GX[i+1][j+1];
 
                 /* Y Gradient */
                 for(i = -1; i <= 1; i++)
                     for(j =- 1; j <= 1; j++)
-                        sumY += (int)( image [ x + i + (y + j)*cols] * GY[i+1][j+1]);
+                        sumY += (int)(image [ x + i + (y + j)*cols]) * GY[i+1][j+1];
                 
                 /* Gradient Magnitude approximation to avoid square root operations */
-                sum = (abs(sumX) + abs(sumY));
+                sum = _abs(sumX) + _abs(sumY);
             }
 
             if(sum > 255) sum = 255;
-            if(sum < THRESHOLD) sum = 0;
+            if(sum < threshold) sum = 0;
             border[x + y*cols] = (unsigned char)(sum);
         }
     }
 }
 
-#undef abs
