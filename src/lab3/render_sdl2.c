@@ -338,9 +338,9 @@ void render_sdl2_dispatch_events()
 		{
 			switch( event.key.keysym.sym )
             {
-				// case SDLK_ESCAPE:
-				// 	render_call_event_callback(EV_QUIT);
-				// 	break;
+				case SDLK_ESCAPE:
+					render_call_event_callback(EV_QUIT);
+					break;
 
 				// case SDLK_UP:
 				// 	render_call_event_callback(EV_KEY_UP);
@@ -384,12 +384,12 @@ void render_sdl2_dispatch_events()
 			//}
 		}
 
-		// if(event.type==SDL_QUIT)
-		// {
-		// 	if(verbosity > 0)
-		// 		printf("RENDER: (event) quit\n");
-		// 	render_call_event_callback(EV_QUIT);
-		// }
+		if(event.type==SDL_QUIT)
+		{
+			if(verbosity > 0)
+				printf("RENDER: (event) quit\n");
+			;
+		}
 	}
 }
 /*
@@ -427,8 +427,6 @@ void render_sdl2_clean()
 
 
 
-
-
 int decode_sdl2_mjpeg_frame(uint8_t *src, uint8_t *dst, size_t size) {
     
     // printf("start converting frame\n");
@@ -444,25 +442,13 @@ int decode_sdl2_mjpeg_frame(uint8_t *src, uint8_t *dst, size_t size) {
             perror("Wrong image format in JPG");
             exit(1);
         }
-
-    // SDL_PixelFormat *fmt = SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
-    // if(!fmt) {
-    //     perror("problem creating SDL format\n");
-    //     printf("SDL: %s\n", SDL_GetError());
-    //     exit(1);
-    // }
-
-    // SDL_Surface *frame2 = SDL_ConvertSurface(frame1, fmt, 0);
-    // SDL_FreeSurface(frame1);
     
     int img_bytes = frame->h*frame->pitch;    
     memcpy(dst, frame->pixels, img_bytes);
 
     SDL_FreeSurface(frame);
-    // SDL_FreeRW(buffer_stream);
-    // SDL_FreeFormat(fmt);
+    SDL_FreeRW(buffer_stream);
     
-    // printf("image read\n");
     return img_bytes;
 }
 
@@ -492,5 +478,102 @@ int GREY_to_RGB24(uint8_t *src, uint8_t *dst, int imgsize) {
         di += dst_pixw;
     }
     return di;
+}
+
+
+
+
+
+
+
+#define RENDER_EVENT_LIST_GEN(evx) \
+	{ \
+		.id = evx, \
+		.callback = NULL, \
+		.data = NULL \
+	}
+
+static render_events_t render_events_list[] =
+{
+		RENDER_EVENT_LIST_GEN( EV_QUIT ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_UP ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_DOWN ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_LEFT ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_RIGHT ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_SPACE ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_I ),
+		RENDER_EVENT_LIST_GEN( EV_KEY_V ),
+		RENDER_EVENT_LIST_GEN( -1 ) // end of list
+};
+
+#undef RENDER_EVENT_LIST_GEN
+
+
+
+
+/*
+ * get event index on render_events_list
+ * args:
+ *    id - event id
+ *
+ * asserts:
+ *    none
+ *
+ * returns: event index or -1 on error
+ */
+static int render_get_event_index(int id)
+{
+	int i = 0;
+	while(render_events_list[i].id >= 0) {
+		if(render_events_list[i].id == id) return i;
+		i++;
+	}
+	return -1;
+}
+
+/*
+ * set event callback
+ * args:
+ *    id - event id
+ *    callback_function - pointer to callback function
+ *    data - pointer to user data (passed to callback)
+ *
+ * asserts:
+ *    none
+ *
+ * returns: error code
+ */
+int render_set_event_callback(int id, render_event_callback callback_function, void *data)
+{
+	int index = render_get_event_index(id);
+	if(index < 0)
+		return index;
+	render_events_list[index].callback = callback_function;
+	render_events_list[index].data = data;
+	return 0;
+}
+
+
+/*
+ * call the event callback for event id
+ * args:
+ *    id - event id
+ *
+ * asserts:
+ *    none
+ *
+ * returns: error code
+ */
+int render_call_event_callback(int id)
+{
+	int index = render_get_event_index(id);
+	if(verbosity > 1)
+		printf("RENDER: event %i -> callback %i\n", id, index);
+	if(index < 0)
+		return index;
+	if(render_events_list[index].callback == NULL)
+		return -1;
+	int ret = render_events_list[index].callback(render_events_list[index].data);
+	return ret;
 }
 

@@ -32,9 +32,6 @@
 
 
 #include "image_process.h"
-  
-
-
 
 
 
@@ -60,7 +57,6 @@ static enum io_method   io = IO_METHOD_MMAP;
 static int              fd = -1;
 struct buffer          *buffers;
 static unsigned int     n_buffers;
-static int              out_buf=0, aa_buf=0, sdl_buf=0;
 static int              force_format;
 static int              frame_count = 140;
 
@@ -70,25 +66,20 @@ static uint8_t * grey_buffer1 = NULL;
 static uint8_t * grey_buffer2 = NULL;
 static uint8_t * grey_buffer3 = NULL;
 
+enum v4l_example_config_enum {
+        OUT_BUF = 1 << 1,
+        AA_BUF  = 1 << 2,
+        SDL_BUF = 1 << 3
+};
+static int16_t v4l_example_config_flags = 0;
 
-// YUYV to GREY conversion //
-// void YUV422_to_grey(unsigned char *src, unsigned char *dst) {    
-//     int x,y;
-//     for(y=0; y<grey_h; ++y) {
-//         for(x=0; x<grey_w; ++x ){
-//             *(dst++) = *src;
-//             src += xbytestep;
-//         }
-//         src += ybytestep;
-//     }
-// }
-
-
-
+static inline int16_t v4l_example_config_test_flags(int16_t flags) { 
+                return (v4l_example_config_flags&flags)>0; 
+        }
 
 static void errno_exit(const char *s)
 {
-        fprintf(stderr, "%s error %d, %s\\n", s, errno, strerror(errno));
+        fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
         exit(EXIT_FAILURE);
 }
 
@@ -186,14 +177,13 @@ static void process_image(const void *p, int size_bytes)
         findCenter(radius, buf2, FRAME_width, FRAME_height, &retX, &retY, &retMax, buf3);
         printf("c:[%d,%d] ~ %d      \r",retX, retY, retMax);
 
-        if (out_buf)
+        if(v4l_example_config_test_flags(OUT_BUF))
                 fwrite(p, size_bytes, 1, stdout);
 
-        if (aa_buf) {
+        if(v4l_example_config_test_flags(AA_BUF)) {
 	        unsigned char *src = (unsigned char*)buf1;
                 unsigned char *dst = (unsigned char*)aa_image(FRAME_context);
 	        
-	        //YUV420toGRAY(FRAME_width, FRAME_height, src, bitmap);
                 aa_context *ctx = FRAME_context;
 
                 // aa_scrwidth()
@@ -209,13 +199,13 @@ static void process_image(const void *p, int size_bytes)
                 aa_flush  ( FRAME_context );                
         }
 
-        if(sdl_buf) {
+        if(v4l_example_config_test_flags(SDL_BUF)) {
                 GREY_to_RGB24(buf2, buf0, img_size);
                 int pitch = v4l_format.fmt.pix.width * sizeof(char) * 3;
                 render_sdl2_frame(buf0, pitch );
         }
 
-        if(out_buf | aa_buf == 0) {
+        if( !v4l_example_config_test_flags(SDL_BUF|AA_BUF) ) {
                 fflush(stderr);
                 fprintf(stderr, ".");
                 fflush(stdout);
@@ -316,13 +306,20 @@ static int read_frame(void)
         return 1;
 }
 
+
+static unsigned mainloop_quit = 0;
+static int mainloop_quit_callback(void *data) { mainloop_quit = 1; return mainloop_quit; }
+
 static void mainloop(void)
 {
         unsigned int count;
-
         count = frame_count;
 
-        while (count-- > 0) {
+        if(v4l_example_config_test_flags(SDL_BUF)) {
+                render_set_event_callback(EV_QUIT, mainloop_quit_callback, NULL);
+        }
+
+        while ( (count-- > 0) && !mainloop_quit ) {
                 for (;;) {
                         fd_set fds;
                         struct timeval tv;
@@ -337,19 +334,19 @@ static void mainloop(void)
 
                         r = select(fd + 1, &fds, NULL, NULL, &tv);
 
+                        render_sdl2_dispatch_events();
+                        if(mainloop_quit) break;
+
                         if (-1 == r) {
-                                if (EINTR == errno)
-                                        continue;
+                                if (EINTR == errno) continue;
                                 errno_exit("select");
                         }
-
                         if (0 == r) {
-                                fprintf(stderr, "select timeout\\n");
+                                fprintf(stderr, "select timeout\n");
                                 exit(EXIT_FAILURE);
                         }
 
-                        if (read_frame())
-                                break;
+                        if (read_frame()) break;
                         /* EAGAIN - continue select loop. */
                 }
         }
@@ -427,7 +424,7 @@ static void init_read(unsigned int buffer_size)
         buffers = calloc(1, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\\n");
+                fprintf(stderr, "Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -435,7 +432,7 @@ static void init_read(unsigned int buffer_size)
         buffers[0].start = malloc(buffer_size);
 
         if (!buffers[0].start) {
-                fprintf(stderr, "Out of memory\\n");
+                fprintf(stderr, "Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 }
@@ -461,7 +458,7 @@ static void init_mmap(void)
         }
 
         if (req.count < 2) {
-                fprintf(stderr, "Insufficient buffer memory on %s\\n",
+                fprintf(stderr, "Insufficient buffer memory on %s\n",
                          dev_name);
                 exit(EXIT_FAILURE);
         }
@@ -469,7 +466,7 @@ static void init_mmap(void)
         buffers = calloc(req.count, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\\n");
+                fprintf(stderr, "Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -521,7 +518,7 @@ static void init_userp(unsigned int buffer_size)
         buffers = calloc(4, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\\n");
+                fprintf(stderr, "Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -530,7 +527,7 @@ static void init_userp(unsigned int buffer_size)
                 buffers[n_buffers].start = malloc(buffer_size);
 
                 if (!buffers[n_buffers].start) {
-                        fprintf(stderr, "Out of memory\\n");
+                        fprintf(stderr, "Out of memory\n");
                         exit(EXIT_FAILURE);
                 }
         }
@@ -546,7 +543,7 @@ static void init_device(void)
 
         if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
                 if (EINVAL == errno) {
-                        fprintf(stderr, "%s is no V4L2 device\\n",
+                        fprintf(stderr, "%s is no V4L2 device\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 } else {
@@ -555,7 +552,7 @@ static void init_device(void)
         }
 
         if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-                fprintf(stderr, "%s is no video capture device\\n",
+                fprintf(stderr, "%s is no video capture device\n",
                          dev_name);
                 exit(EXIT_FAILURE);
         }
@@ -563,7 +560,7 @@ static void init_device(void)
         switch (io) {
         case IO_METHOD_READ:
                 if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-                        fprintf(stderr, "%s does not support read i/o\\n",
+                        fprintf(stderr, "%s does not support read i/o\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 }
@@ -572,7 +569,7 @@ static void init_device(void)
         case IO_METHOD_MMAP:
         case IO_METHOD_USERPTR:
                 if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-                        fprintf(stderr, "%s does not support streaming i/o\\n",
+                        fprintf(stderr, "%s does not support streaming i/o\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 }
@@ -622,7 +619,6 @@ static void init_device(void)
                         errno_exit("VIDIOC_S_FMT");
 
                 /* Note VIDIOC_S_FMT may change width and height. */
-
         } else {
                 /* Preserve original settings as set by v4l2-ctl for example */
                 if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
@@ -673,13 +669,6 @@ static void init_device(void)
                 break;
         }
 
-
-        // xbytestep = xstep + xstep; // for YUV422. for other formats may differ
-        // ybytestep = fmt.fmt.pix.bytesperline * (ystep-1);
-        // we shrink our pixels crudely, by hopping over them:
-        // aalib converts every block of 4 pixels to one character, so our sizes shrink by 2:
-        // aw = gw / 2;
-        // ah = gh / 2;
     
         int grey_size = FRAME_width * FRAME_height * sizeof(char);
 
@@ -688,7 +677,7 @@ static void init_device(void)
         grey_buffer2 = (uint8_t*)malloc(grey_size);
         grey_buffer3 = (uint8_t*)malloc(grey_size);
 
-        if(sdl_buf) 
+        if(v4l_example_config_test_flags(SDL_BUF))
           init_render_sdl2(FRAME_width, FRAME_height, 0);
 
 
@@ -721,7 +710,8 @@ static void uninit_device(void)
         if (grey_buffer1) free(grey_buffer1);
         if (grey_buffer2) free(grey_buffer2);
         if (grey_buffer2) free(grey_buffer3);
-        if (sdl_buf) render_sdl2_clean();
+        if(v4l_example_config_test_flags(SDL_BUF))
+                render_sdl2_clean();
 }
 
 
@@ -730,7 +720,7 @@ static void open_device(void)
         struct stat st;
 
         if (-1 == stat(dev_name, &st)) {
-                fprintf(stderr, "Cannot identify '%s': %d, %s\\n",
+                fprintf(stderr, "Cannot identify '%s': %d, %s\n",
                          dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
@@ -743,7 +733,7 @@ static void open_device(void)
         fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
 
         if (-1 == fd) {
-                fprintf(stderr, "Cannot open '%s': %d, %s\\n",
+                fprintf(stderr, "Cannot open '%s': %d, %s\n",
                          dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
@@ -761,20 +751,20 @@ static void close_device(void)
 static void usage(FILE *fp, int argc, char **argv)
 {
         fprintf(fp,
-                 "Usage: %s [options]\\n\\n"
-                 "Version 1.3\\n"
-                 "Options:\\n"
-                 "-d | --device name   Video device name [%s]n"
-                 "-h | --help          Print this messagen"
-                 "-m | --mmap          Use memory mapped buffers [default]n"
-                 "-r | --read          Use read() callsn"
-                 "-u | --userp         Use application allocated buffersn"
-                 "-o | --output        Outputs stream to stdoutn"
-                 "-a | --aalib         Outputs stream to aalib"
-                 "-s | --sdl2          Outputs stream to sdl2"
-                 "-f | --format        Force format to 640x480 YUYVn"
-                 "-c | --count         Number of frames to grab [%i]n"
-                 "",
+                 "Usage: %s [options]\n\n"
+                 "Version 1.3\n"
+                 "Options:\n"
+                 "-d | --device name   Video device name [%s]\n"
+                 "-h | --help          Print this message\n"
+                 "-m | --mmap          Use memory mapped buffers [default]\n"
+                 "-r | --read          Use read() calls\n"
+                 "-u | --userp         Use application allocated buffers\n"
+                 "-o | --output        Outputs stream to stdout\n"
+                 "-a | --aalib         Outputs stream to aalib\n"
+                 "-s | --sdl2          Outputs stream to sdl2\n"
+                 "-f | --format        Force format to 640x480 YUYV\n"
+                 "-c | --count         Number of frames to grab [%i]\n"
+                 "\n",
                  argv[0], dev_name, frame_count);
 }
 
@@ -834,18 +824,18 @@ int main(int argc, char **argv)
                         break;
 
                 case 'o':
-                        out_buf++;
+                        v4l_example_config_flags |= OUT_BUF;
                         break;
 
                 case 'a':
                         FRAME_context = aa_create_framebuffer();
-                        aa_buf++;
+                        v4l_example_config_flags |= AA_BUF;
                         break;
 
                 case 's':
                         
                         // render_sdl2_clean();
-                        sdl_buf++;
+                        v4l_example_config_flags |= SDL_BUF;
                         break;
 
                 case 'f':
@@ -873,6 +863,6 @@ int main(int argc, char **argv)
         uninit_device();
         close_device();
         if (FRAME_context) aa_close(FRAME_context);
-        fprintf(stderr, "\\n");
+        fprintf(stderr, "\n");
         return 0;
 }

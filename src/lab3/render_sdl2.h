@@ -98,9 +98,36 @@ void render_sdl2_clean();
 
 int decode_sdl2_mjpeg_frame(uint8_t *src, uint8_t *dst, size_t size);
 
-
 int RGB24_to_GREY(uint8_t *src, uint8_t *dst, int imgsize);
 
 int GREY_to_RGB24(uint8_t *src, uint8_t *dst, int imgsize);
+
+
+enum render_event_callback_enum {
+EV_QUIT = 0 ,
+EV_KEY_UP   ,
+EV_KEY_DOWN ,
+EV_KEY_LEFT ,
+EV_KEY_RIGHT,
+EV_KEY_SPACE,
+EV_KEY_I    ,
+EV_KEY_V    ,
+};
+
+typedef int (*render_event_callback)(void *data);
+
+typedef struct _render_events_t
+{
+	int id;
+	render_event_callback callback;
+	void *data;
+
+} render_events_t;
+
+
+int render_set_event_callback(int id, render_event_callback callback_function, void *data);
+
+int render_call_event_callback(int id);
+
 
 #endif
