@@ -1,5 +1,5 @@
 
-all: read_mouse VideoCapture v4l_example
+all: read_mouse VideoCapture
 
 read_mouse: read_mouse.c
 	${CC} $^ -o $@
@@ -7,8 +7,5 @@ read_mouse: read_mouse.c
 VideoCapture: VideoCapture.c
 	${CC} $^ -o $@
 
-v4l_example: v4l_example.c
-	${CC} $^ -o $@ -laa
-
 clean:
-	rm -f read_mouse VideoCapture v4l_example
+	rm -f read_mouse VideoCapture
