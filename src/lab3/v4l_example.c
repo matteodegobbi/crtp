@@ -56,20 +56,23 @@ static enum io_method io = IO_METHOD_MMAP;
 static int fd = -1;
 struct buffer *buffers;
 static unsigned int n_buffers;
-static int force_format;
 static int frame_count = 140;
 
 struct v4l2_format v4l_format;
+
 
 static uint8_t *grey_buffer1 = NULL;
 static uint8_t *grey_buffer2 = NULL;
 static uint8_t *grey_buffer3 = NULL;
 
+
 enum v4l_example_config_enum
 {
-    OUT_BUF = 1 << 1,
-    AA_BUF = 1 << 2,
-    SDL_BUF = 1 << 3
+    FORCE_FORMAT = 1 << 0,
+    OUT_BUF      = 1 << 1,
+    AA_BUF       = 1 << 2,
+    SDL_BUF      = 1 << 3,
+    SOBEL_OPTI   = 1 << 4
 };
 static int16_t v4l_example_config_flags = 0;
 
@@ -107,15 +110,8 @@ aa_context *aa_create_framebuffer()
     aa_defparams.minheight = 40;
 
     // aa_defrenderparams.bright = 0.5;
-    aa_defrenderparams.gamma = 1;
+    // aa_defrenderparams.gamma = 1;
     // aa_defrenderparams.contrast = 60;
-
-    /* Initialize output driver. */
-    //     context = aa_autoinit (&aa_defparams);
-    //     if (context == NULL) {
-    //         printf ("Failed to initialize aalib\n");
-    //         exit (1);
-    //     }
 
     /* Initialize output driver. */
     context = aa_init(&curses_d, &aa_defparams, 0);
@@ -124,18 +120,7 @@ aa_context *aa_create_framebuffer()
         printf("Failed to initialize aalib\n");
         exit(1);
     }
-    printf("img: [%dx%d]\n", aa_imgwidth(context), aa_imgheight(context));
-
-    // aa_renderpalette (context, palette, &aa_defrenderparams,
-    // /* Top left conner of rendered area: */ 0, 0,
-    // /* Bottom right */ aa_scrwidth (context), aa_scrheight (context));
-
-    /* If you don't use palette use following function: */
-    //     aa_render (context, &aa_defrenderparams,
-    //     0, 0, aa_scrwidth (context), aa_scrheight (context));
-
-    /* And make it visible: */
-    // aa_flush (context);
+    printf("aa img: [%dx%d]\n", aa_imgwidth(context), aa_imgheight(context));
 
     return context;
 }
@@ -162,7 +147,10 @@ static void process_image(const void *p, int size_bytes)
     }
 
     // YUV422_to_grey(p, (unsigned char *)buf1);
-    makeBorder(buf1, buf2, FRAME_width, FRAME_height, 150);
+    if(v4l_example_config_test_flags(SOBEL_OPTI))
+        makeBorderOptimized(buf1, buf2, FRAME_width, FRAME_height, 150);
+    else
+        makeBorderNonOptimized(buf1, buf2, FRAME_width, FRAME_height, 150);
 
     int radius = 20;
     int retX, retY, retMax;
@@ -285,7 +273,6 @@ static int read_frame(void)
 
             case EIO:
                 /* Could ignore EIO, see spec. */
-
                 /* fall through */
 
             default:
@@ -651,7 +638,7 @@ static void init_device(void)
     CLEAR(fmt);
 
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    if (force_format)
+    if (v4l_example_config_test_flags(FORCE_FORMAT))
     {
         fmt.fmt.pix.width = FRAME_width;
         fmt.fmt.pix.height = FRAME_height;
@@ -812,13 +799,14 @@ static void usage(FILE *fp, int argc, char **argv)
             "-o | --output        Outputs stream to stdout\n"
             "-a | --aalib         Outputs stream to aalib\n"
             "-s | --sdl2          Outputs stream to sdl2\n"
+            "-O | --opti          Select optimized Sobel transform\n"
             "-f | --format        Force format to 640x480 YUYV\n"
             "-c | --count         Number of frames to grab [%i]\n"
             "\n",
             argv[0], dev_name, frame_count);
 }
 
-static const char short_options[] = "d:hmruoasfc:";
+static const char short_options[] = "d:hmruoasOfc:";
 
 static const struct option
     long_options[] = {
@@ -830,6 +818,7 @@ static const struct option
         {"output", no_argument, NULL, 'o'},
         {"aalib", no_argument, NULL, 'a'},
         {"sdl2", no_argument, NULL, 's'},
+        {"opti", no_argument, NULL, 'O'},
         {"format", no_argument, NULL, 'f'},
         {"count", required_argument, NULL, 'c'},
         {0, 0, 0}};
@@ -884,13 +873,16 @@ int main(int argc, char **argv)
             break;
 
         case 's':
-
             // render_sdl2_clean();
             v4l_example_config_flags |= SDL_BUF;
             break;
 
+        case 'O':
+            v4l_example_config_flags |= SOBEL_OPTI;
+            break;
+
         case 'f':
-            force_format++;
+            v4l_example_config_flags |= FORCE_FORMAT;
             break;
 
         case 'c':
