@@ -19,11 +19,12 @@ static const int GY[3][3] = {
 static inline int _abs(int x) { return (x>0)?x:-x; }
 
 /* Sobel Filter computation for Edge detection. */
-void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows, int threshold)
+int makeBorderNonOptimized(unsigned char *image, unsigned char *border, int cols, int rows, int threshold)
 /* Input image is passed in the byte array image (cols x rows pixels)
    Filtered image is returned in byte array border */
 {
     int x,y, i, j, sumX, sumY, sum;
+    int numBlackPixels = 0;
 
     for(y = 0; y < rows; ++y)
     {
@@ -54,8 +55,11 @@ void makeBorder(unsigned char *image, unsigned char *border, int cols, int rows,
 
             if(sum > 255) sum = 255;
             if(sum < threshold) sum = 0;
-            border[x + y*cols] = (unsigned char)(sum);
+            else 
+                ++numBlackPixels;
+            border[x + y*cols] = 255 - (unsigned char)(sum);
         }
     }
+    return numBlackPixels;
 }
 
