@@ -62,12 +62,13 @@ int main(int argc, char **argv)
   gettimeofday(&time2, NULL);
 
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t_end);
-  double time_spent = (t_end.tv_sec - t_start.tv_sec) * 1e6 +
+  double t_process_us = (t_end.tv_sec - t_start.tv_sec) * 1e6 +
                       (t_end.tv_nsec - t_start.tv_nsec) / 1e3;
 
   printf("Num Pixels: %d\tNum  Black Pixels: %d\n", rows * cols, numBlackPixels);
   usecs = (time2.tv_sec - time1.tv_sec) * 1000000 + (time2.tv_usec - time1.tv_usec);
-  printf("Elapsed time(us): %d\n", usecs);
+  printf("Elapsed system time(us) : %d\n", usecs);
+  printf("Elapsed process time(us): %f\n", t_process_us);
   outF = fopen(argv[2], "w");
   fprintf(outF, "%d %d\n", rows, cols);
   for (row = 0; row < rows; row++)
