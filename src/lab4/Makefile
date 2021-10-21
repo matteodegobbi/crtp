@@ -1,6 +1,7 @@
 
 
-CFLAGS = -O0 -g3
+CFLAGS = -O3
+#CFLAGS += -fdump-passes #show active optimization passes
 
 all: ackermann test_gradient
 
@@ -18,9 +19,13 @@ ackermann: ackermann.o
 
 
 DUMP_TREES = original cfg ssa optimized
+DUMP_RTL = final
 # DUMP_TREES = all
+# DUMP_RTL = final
 
-ackermann_function.o: CFLAGS = -O3 $(foreach t,${DUMP_TREES},-fdump-tree-$t -fdump-tree-$t-graph )
+ackermann_function.o: \
+CFLAGS = $(foreach t,${DUMP_TREES},-fdump-tree-$t -fdump-tree-$t-graph ) \
+         $(foreach t,${DUMP_RTL},-fdump-rtl-$t )
 
 .SUFFIXES: .dot .png 
 .dot.png:
