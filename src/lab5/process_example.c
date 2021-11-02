@@ -11,6 +11,8 @@
 #define ROWS 10000L
 #define COLS 10000L
 
+#define PAUSE sleep(60);
+
 /* Arguments exchanged with child processes */
 struct argument{
   int startRow;
@@ -34,17 +36,18 @@ static void processRoutine()
 {
   int i, j;
   long sum = 0;
-
+  printf("I'm working on process %d: pid = %d\n", currProcessIdx, getpid());
 /* processArgs is the pointer to the shared memory inherited by the
    parent process. processArg[currProcessIdx] is the argument
    structure specific to the child process */
   for(i = 0; i < processArgs[currProcessIdx].nRows; i++)
     for(j = 0; j < COLS; j++)
-      sum += bigMatrix[(processArgs[currProcessIdx].startRow + i) * COLS
-                       + j];
+      sum += bigMatrix[(processArgs[currProcessIdx].startRow + i) * COLS + j];
 /* Report the computed sum into the argument structure */
   processArgs[currProcessIdx].partialSum = sum;
+  PAUSE
 }
+
 
 int main(int argc, char *args[])
 {
@@ -61,6 +64,8 @@ int main(int argc, char *args[])
     exit(0);
   }
   sscanf(args[1], "%d", &nProcesses);
+
+  printf("Parent pid: %d\n", getpid());
 /* Create a shared memory segment to contain the argument structures
    for all child processes. Set Read/Write permission in flags argument. */
   memId = shmget(IPC_PRIVATE, nProcesses * sizeof(struct argument), 0666);
@@ -123,4 +128,5 @@ int main(int argc, char *args[])
     waitpid(pids[currProcessIdx], NULL, 0);
     totalSum += processArgs[currProcessIdx].partialSum;
   }
+
 }

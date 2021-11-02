@@ -1,9 +1,10 @@
 
 
-.c.o:
-	$(CC) $^ -c 
 
-all: threads process
+all: threads process print_segments
+
+print_segments: print_segments.o
+	$(LINK.C) $^ -o $@
 
 threads_example: threads_example.o
 	$(LINK.C) $^ -o $@ -lpthread

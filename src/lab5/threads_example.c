@@ -3,12 +3,17 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#include <unistd.h> // sleep
+
 #define MAX_THREADS 256
 #define ROWS 10000
 #define COLS 10000
 
+#define PAUSE sleep(60);
+
 /* Arguments exchanged with threads */
 struct argument{
+  int threadN;
   int startRow;
   int nRows;
   long partialSum;
@@ -27,12 +32,17 @@ static void *threadRoutine(void *arg)
    and the return sum argument */
   struct argument *currArg = (struct argument *)arg;
   long sum = 0;
+  printf("I'm working on thread %d\n", currArg->threadN);
   for(i = 0; i < currArg->nRows; i++)
     for(j = 0; j < COLS; j++)
       sum += bigMatrix[(currArg->startRow + i) * COLS + j];
+  // printf("I'm working on thread %d\n", currArg->threadN);  
   currArg->partialSum = sum;
+  PAUSE
   return NULL;
 }
+
+
 int main(int argc, char *args[])
 {
 /* Array of thread identifiers */
@@ -63,6 +73,7 @@ int main(int argc, char *args[])
   for(i = 0; i < nThreads; i++)
   {
 /* Prepare Thread arguments */
+    threadArgs[i].threadN = i;
     threadArgs[i].startRow = i*rowsPerThread;
     if(i == nThreads - 1)
       threadArgs[i].nRows = lastThreadRows;
