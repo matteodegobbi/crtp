@@ -4,13 +4,13 @@
 all: threads process print_segments
 
 print_segments: print_segments.o
-	$(LINK.C) $^ -o $@
+	$(LINK.o) $^ -o $@
 
 threads_example: threads_example.o
-	$(LINK.C) $^ -o $@ -lpthread
+	$(LINK.o) $^ -o $@ -lpthread
 
 process_example: process_example.o
-	$(LINK.C) $^ -o $@
+	$(LINK.o) $^ -o $@
 
 .SUFFIXES: .pix .png .csv
 .pix.png:
@@ -19,7 +19,7 @@ process_example: process_example.o
 	python benchmark.py $<
 
 threads_benchmark: threads_benchmark.o
-	$(LINK.C) $^ -o $@ -lpthread
+	$(LINK.o) $^ -o $@ -lpthread
 
 MAX_THREADS = 20
 threads_benchmark.csv:

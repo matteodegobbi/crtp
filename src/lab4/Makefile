@@ -24,7 +24,7 @@ ackermann: CFLAGS += -fdump-tree-original \
 
 # ackermann application target
 ackermann: ackermann.o
-	${LINK.c} $^ -o $@ 
+	${LINK.o} $^ -o $@ 
 
 
 
@@ -70,7 +70,7 @@ graphs: ${GRAPH_FILES}
 # the Sobel filter example
 
 test_gradient: gradient.o test_gradient.o
-	${LINK.c} $^ -o $@
+	${LINK.o} $^ -o $@
 
 
 clean:
