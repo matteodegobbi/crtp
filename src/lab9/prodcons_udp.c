@@ -168,7 +168,7 @@ static int producer()
     }
     sleep(1);
     for(int i=0; i<active_clients_len; ++i) {
-        sendto(sockfd, "STOP", 4, MSG_CONFIRM, &active_clients[i], sizeof(active_clients[i]));
+        sendto(sockfd, "STOP", 4, MSG_CONFIRM, (struct sockaddr *)&active_clients[i], sizeof(active_clients[i]));
     }
     return 0;
 }
