@@ -71,8 +71,8 @@ static int consumer()
     servaddr.sin_addr.s_addr = INADDR_ANY;
 
     struct timeval tv;
-    tv.tv_sec  = 1;
-    tv.tv_usec = 0;
+    tv.tv_sec  = 0;
+    tv.tv_usec = 5000;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
     int n, len;
@@ -120,8 +120,8 @@ static int producer()
     }
        
     struct timeval tv;
-    tv.tv_sec  = 1;
-    tv.tv_usec = 0;
+    tv.tv_sec  = 0;
+    tv.tv_usec = 5000;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
     // Filling server information
@@ -149,7 +149,7 @@ static int producer()
             struct timespec send_time;
             clock_gettime(CLOCK_REALTIME, &send_time);
             sendto(sockfd, (char *)&send_time, sizeof(struct timespec),
-                    MSG_CONFIRM, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
+                   MSG_CONFIRM, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
             // printf("sent message %d\n", last_pos);
             last_pos++;
         }
@@ -160,13 +160,13 @@ static int producer()
             // HELLO FROM CLIENT
             if( n==4 && strncmp(buffer,"HELO",4)==0) {
                 active_clients[active_clients_len] = cliaddr;
-                printf("got hello %d\n", active_clients_len);
+                printf("hello %d\n", active_clients_len);
                 active_clients_len++;
             }
         }
         usleep(10);
     }
-    sleep(1);
+    printf("stopping %d clients\n", active_clients_len);
     for(int i=0; i<active_clients_len; ++i) {
         sendto(sockfd, "STOP", 4, MSG_CONFIRM, (struct sockaddr *)&active_clients[i], sizeof(active_clients[i]));
     }
@@ -192,7 +192,7 @@ int main(int argc , char *args[])
 
     clock_gettime(CLOCK_REALTIME, &t_start);
     /* Spawn child processes */
-    for(id = 0; id < nConsumers; id++)
+    for(id = 0; id < nConsumers; ++id)
     {
         pids[id] = fork();
         if(pids[id] == 0)
