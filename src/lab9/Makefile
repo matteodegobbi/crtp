@@ -9,7 +9,7 @@ PROGRAMS = prodcons \
            prodcons_4_ok \
 		   prodcons_udp
 
-LDFLAGS = -lpthread -lm
+LDLIBS = -lpthread -lm
 # CPPFLAGS = -O0 -g3
 
 all: $(PROGRAMS)
