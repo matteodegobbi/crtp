@@ -1,4 +1,5 @@
-PROGRAMS = prodcons_affinity
+PROGRAMS = prodcons_affinity \
+           prodcons_attributes
 
 LDLIBS = -lpthread -lm
 # CPPFLAGS = -O0 -g3
