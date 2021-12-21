@@ -4,8 +4,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/time.h>
-#include <time.h>
 #include <math.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -68,7 +66,8 @@ static int consumer()
     // Filling server information
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(PORT);
-    servaddr.sin_addr.s_addr = INADDR_ANY;
+    inet_aton("127.0.0.1", &servaddr.sin_addr);
+    //servaddr.sin_addr.s_addr = INADDR_ANY;
 
     struct timeval tv;
     tv.tv_sec  = 0;
@@ -76,13 +75,18 @@ static int consumer()
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
     int n, len;
-    while( connect(sockfd, (const struct sockaddr *) &servaddr,
-                   sizeof(servaddr)) );
-    send(sockfd, "HELO", 4, MSG_CONFIRM);
+    sendto(sockfd, "HELO", 4, MSG_CONFIRM, (const struct sockaddr *) &servaddr,
+                   sizeof(servaddr));
+    printf("CONSUMER: Sent HELLO\n");
     struct timespec send_time, receive_time;
     while(1) {
         n = recv(sockfd, (char *)buffer, BUFFER_SIZE*sizeof(int), MSG_WAITALL);
-        if(n==4 && strncmp(buffer,"STOP",4) == 0) break;
+        //if(n > 0) printf("CONSUMER: received message %d\n", n);
+        if(n==4 && strncmp(buffer,"STOP",4) == 0)
+        {
+            printf("CONSUMER: Received STOP\n");
+            break;
+        }
         if(n==sizeof(struct timespec)) { 
             memcpy(&send_time, buffer, sizeof(struct timespec));
             clock_gettime(CLOCK_REALTIME, &receive_time);
@@ -96,25 +100,11 @@ static int consumer()
     return 0;
 }
 
-
-
-static int producer()
+static int bindProducer()
 {
-    int sockfd;
-    int active_packet_id[MAX_PROCESSES];
-    int readIdx = 0;
-    int writeIdx = 0;
-    int last_pos = 0;
-    
-    struct sockaddr_in servaddr, cliaddr, cliaddr2;
-    struct sockaddr_in active_clients[MAX_PROCESSES];
-    int active_clients_status[MAX_PROCESSES];
-    int active_clients_len = 0;
-    int next_client_id = 0;
-
-       
-    // Creating socket file descriptor
-    if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+   struct sockaddr_in servaddr;
+   int sockfd;
+   if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         perror("socket creation failed");
         exit(EXIT_FAILURE);
     }
@@ -136,33 +126,56 @@ static int producer()
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    return sockfd;
+}
+
+static int producer(int sockfd, int expectedClients)
+{
+    int active_packet_id[MAX_PROCESSES];
+    int readIdx = 0;
+    int writeIdx = 0;
+    int last_pos = 0;
+    
+    struct sockaddr_in cliaddr;
+    struct sockaddr_in active_clients[MAX_PROCESSES];
+    int active_clients_status[MAX_PROCESSES];
+    int active_clients_len = 0;
+    int next_client_id = 0;
+
        
+    // Creating socket file descriptor
+        
     memset(&cliaddr, 0, sizeof(cliaddr));
     memset(active_clients_status, 0, sizeof(active_clients_status));
-    int id, n, len;
+    int id, n, len = sizeof(struct sockaddr_in);
     char buffer[BUFFER_SIZE];
 
-    while(last_pos < HISTORY_LEN) {
-        if(active_clients_len) {
+    printf("Waiting clients....\n");
+    while(active_clients_len < expectedClients)
+    {
+        n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, 
+                   MSG_DONTWAIT, ( struct sockaddr *) &cliaddr,
+                    &len);
+        if(n>0) {
+                printf("hello %d LenAddr: %d, Port: %d Addr: %s\n", active_clients_len, len,  cliaddr.sin_port, inet_ntoa(cliaddr.sin_addr));
+           // HELLO FROM CLIENT
+            if( n==4 && strncmp(buffer,"HELO",4)==0) {
+                active_clients[active_clients_len] = cliaddr;
+                 active_clients_len++;
+            }
+        }
+    }
+    printf("All Clients Connected\n");
+    while(last_pos < HISTORY_LEN || active_clients_len < expectedClients) {
+        if(last_pos < HISTORY_LEN && active_clients_len) {
             cliaddr = active_clients[next_client_id++];
             next_client_id %= active_clients_len;
             struct timespec send_time;
             clock_gettime(CLOCK_REALTIME, &send_time);
             sendto(sockfd, (char *)&send_time, sizeof(struct timespec),
                    MSG_CONFIRM, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
-            // printf("sent message %d\n", last_pos);
+           // printf("PRODUCER: sent message %d\n", last_pos);
             last_pos++;
-        }
-        n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, 
-                    MSG_DONTWAIT, ( struct sockaddr *) &cliaddr,
-                    &len);
-        if(n>0) {
-            // HELLO FROM CLIENT
-            if( n==4 && strncmp(buffer,"HELO",4)==0) {
-                active_clients[active_clients_len] = cliaddr;
-                printf("hello %d\n", active_clients_len);
-                active_clients_len++;
-            }
         }
         usleep(10);
     }
@@ -181,6 +194,7 @@ int main(int argc , char *args[])
 {
     int nConsumers;
     int i, id;
+    int sockfd;
     pid_t pids[MAX_PROCESSES];
     struct timespec t_start, t_end;
     if(argc != 2)
@@ -189,7 +203,13 @@ int main(int argc , char *args[])
         exit(0);
     }
     sscanf(args[1], "%d", &nConsumers);
-
+    if(nConsumers > MAX_PROCESSES)
+    {
+        printf("Maximun allowed number of consumers: %d\n", MAX_PROCESSES);
+        exit(0);
+    }
+    
+    sockfd = bindProducer();
     clock_gettime(CLOCK_REALTIME, &t_start);
     /* Spawn child processes */
     for(id = 0; id < nConsumers; ++id)
@@ -214,7 +234,8 @@ int main(int argc , char *args[])
         }
     }
     // PARENT PROCESS
-    producer();
+    producer(sockfd, nConsumers);
+    printf("USCITO DA PRODUCER\n");
     for(id = 0; id < nConsumers; id++)
     {
         /* Wait child process termination */
