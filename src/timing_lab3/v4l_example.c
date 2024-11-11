@@ -27,16 +27,20 @@
 
 #include <linux/videodev2.h>
 
-#include <aalib.h>
+//#include <aalib.h>
 #include "render_sdl2.h"
 
 #include "image_process.h"
 
-#define CLEAR(x) memset(&(x), 0, sizeof(x))
 
+#include <time.h> // for clock_t, clock()
+#include <unistd.h> // for sleep()
+
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
+#define BILLION 1000000000.0
 static int FRAME_width = 640;
 static int FRAME_height = 480;
-aa_context *FRAME_context = NULL;
+//aa_context *FRAME_context = NULL;
 
 enum io_method
 {
@@ -99,11 +103,11 @@ static int xioctl(int fh, int request, void *arg)
     return r;
 }
 
-aa_context *aa_create_framebuffer()
+/*aa_context *aa_create_framebuffer()
 {
     int i;
-    aa_context *context; /* The information about currently initialized device. */
-    aa_palette palette;  /* Emulated palette (optional) */
+    aa_context *context; // The information about currently initialized device. 
+    aa_palette palette;  // Emulated palette (optional) 
                          // char *framebuffer;
 
     aa_defparams.minwidth = 80;
@@ -113,7 +117,7 @@ aa_context *aa_create_framebuffer()
     // aa_defrenderparams.gamma = 1;
     // aa_defrenderparams.contrast = 60;
 
-    /* Initialize output driver. */
+     Initialize output driver. 
     context = aa_init(&curses_d, &aa_defparams, 0);
     if (context == NULL)
     {
@@ -123,7 +127,7 @@ aa_context *aa_create_framebuffer()
     printf("aa img: [%dx%d]\n", aa_imgwidth(context), aa_imgheight(context));
 
     return context;
-}
+}*/
 
 typedef char PIXEL;
 
@@ -154,23 +158,29 @@ static void process_image(const void *p, int size_bytes)
 
     int radius = 20;
     int retX, retY, retMax;
-
+    struct timespec start, end;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     findCenter(radius, buf2, FRAME_width, FRAME_height, &retX, &retY, &retMax, buf3);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+    // time_spent = end - start
+    double time_spent = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / BILLION;
+printf("Time elpased is %f seconds", time_spent);
     printf("c:[%d,%d] ~ %d      \r", retX, retY, retMax);
 
     if (v4l_example_config_test_flags(OUT_BUF))
         fwrite(p, size_bytes, 1, stdout);
 
+    /*
     if (v4l_example_config_test_flags(AA_BUF))
     {
         unsigned char *src = (unsigned char *)buf1;
-        unsigned char *dst = (unsigned char *)aa_image(FRAME_context);
+        //unsigned char *dst = (unsigned char *)aa_image(FRAME_context);
 
-        aa_context *ctx = FRAME_context;
+        //aa_context *ctx = FRAME_context;
 
         // aa_scrwidth()
-        int size_x = aa_imgwidth(ctx);
-        int size_y = aa_imgheight(ctx);
+        //int size_x = aa_imgwidth(ctx);
+        //int size_y = aa_imgheight(ctx);
 
         // memcpy(bitmap,src,size);
         for (int y = 0; y < size_y; ++y)
@@ -178,9 +188,10 @@ static void process_image(const void *p, int size_bytes)
             memcpy(&dst[y * size_x], &src[y * FRAME_width], size_x);
         }
 
-        aa_render(ctx, &aa_defrenderparams, 0, 0, aa_imgwidth(ctx), aa_imgheight(ctx));
-        aa_flush(FRAME_context);
+        //aa_render(ctx, &aa_defrenderparams, 0, 0, aa_imgwidth(ctx), aa_imgheight(ctx));
+        //aa_flush(FRAME_context);
     }
+    */
 
     if (v4l_example_config_test_flags(SDL_BUF))
     {
@@ -868,8 +879,8 @@ int main(int argc, char **argv)
             break;
 
         case 'a':
-            FRAME_context = aa_create_framebuffer();
-            v4l_example_config_flags |= AA_BUF;
+            //FRAME_context = aa_create_framebuffer();
+            //v4l_example_config_flags |= AA_BUF;
             break;
 
         case 's':
@@ -905,8 +916,8 @@ int main(int argc, char **argv)
     stop_capturing();
     uninit_device();
     close_device();
-    if (FRAME_context)
-        aa_close(FRAME_context);
+    //if (FRAME_context)
+    //    aa_close(FRAME_context);
     fprintf(stderr, "\n");
     return 0;
 }
