@@ -43,3 +43,75 @@ ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive c
 ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive call is too large
 ackermann.c:65:15: missed:    not inlining recursively: --param max-inline-recursive-depth exceeded.
 ackermann.c:65:15: optimized:  Inlined ackermann/72 into ackermann/46 which now has time 137.866745 and size 79, net change of +64.
+ackermann.c:42:5: optimized:   Inlining vprintf/16 into print_log/40 (always_inline).
+ackermann.c:39:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:34:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:30:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:26:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:22:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:65:15: missed:   Not inlining: recursive call.
+ackermann.c:65:15: missed:   Not inlining: recursive call.
+ackermann.c:64:27: missed:   Not inlining: recursive call.
+ackermann.c:54:1: missed:   will not early inline: log_error/42->print_log/40, call is cold and code would grow at least by 9
+ackermann.c:57:1: missed:   will not early inline: log_info/45->print_log/40, call is cold and code would grow at least by 9
+ackermann.c:74:11: optimized:   Inlining atoi/23 into main/47 (always_inline).
+ackermann.c:85:14: missed:   will not early inline: main/47->ackermann/46, call is cold and code would grow at least by 8
+ackermann.c:83:14: missed:   will not early inline: main/47->ackermann/46, call is cold and code would grow at least by 8
+ackermann.c:82:14: missed:   will not early inline: main/47->ackermann/46, call is cold and code would grow at least by 8
+ackermann.c:81:14: missed:   will not early inline: main/47->ackermann/46, call is cold and code would grow at least by 8
+ackermann.c:54:1: missed:   not inlinable: log_error.constprop/60 -> __builtin_va_start/49, function body not available
+ackermann.c:54:1: missed:   not inlinable: log_error.constprop/60 -> __builtin_va_end/50, function body not available
+ackermann.c:57:1: missed:   not inlinable: log_info.constprop/59 -> __builtin_va_start/49, function body not available
+ackermann.c:57:1: missed:   not inlinable: log_info.constprop/59 -> __builtin_va_end/50, function body not available
+ackermann.c:80:27: missed:   not inlinable: main/47 -> log_info.constprop/59, function not inlinable
+/usr/include/stdlib.h:483:16: missed:   not inlinable: main/47 -> strtol/54, function body not available
+ackermann.c:72:7: missed:   not inlinable: main/47 -> exit/48, function body not available
+ackermann.c:71:7: missed:   not inlinable: main/47 -> log_error.constprop/60, function not inlinable
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:99:10: missed:   not inlinable: print_log/40 -> __vfprintf_chk/53, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+ackermann.c:54:1: optimized:  Inlined print_log/61 into log_error.constprop/60 which now has time 31.784000 and size 23, net change of +12.
+ackermann.c:57:1: optimized:  Inlined print_log/40 into log_info.constprop/59 which now has time 31.784000 and size 23, net change of -30.
+ackermann.c:81:14: optimized:  Inlined ackermann/63 into main/47 which now has time 761.487265 and size 52, net change of +8.
+ackermann.c:82:14: optimized:  Inlined ackermann/64 into main/47 which now has time 923.703925 and size 60, net change of +8.
+ackermann.c:85:14: optimized:  Inlined ackermann/65 into main/47 which now has time 1085.920588 and size 68, net change of +8.
+ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive call is too large
+ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive call is too large
+ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive call is too large
+ackermann.c:83:14: optimized:  Inlined ackermann/66 into main/47 which now has time 1256.224922 and size 77, net change of +9.
+ackermann.c:65:15: missed:    not inlining recursively: frequency of recursive call is too large
+ackermann.c:65:15: missed:    not inlining recursively: --param max-inline-recursive-depth exceeded.
+ackermann.c:65:15: optimized:  Inlined ackermann/68 into ackermann/46 which now has time 137.866745 and size 79, net change of +64.
+ackermann.c:42:5: optimized:   Inlining vprintf/16 into print_log/40 (always_inline).
+ackermann.c:39:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:34:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:30:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:26:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:22:9: optimized:   Inlining printf/15 into print_log/40 (always_inline).
+ackermann.c:74:11: optimized:   Inlining atoi/23 into main/47 (always_inline).
+ackermann.c:85:14: missed:   not inlinable: main/47 -> ackermann/46, function not inline candidate
+ackermann.c:83:14: missed:   not inlinable: main/47 -> ackermann/46, function not inline candidate
+ackermann.c:82:14: missed:   not inlinable: main/47 -> ackermann/46, function not inline candidate
+ackermann.c:81:14: missed:   not inlinable: main/47 -> ackermann/46, function not inline candidate
+ackermann.c:80:27: missed:   not inlinable: main/47 -> log_info/45, function not inlinable
+/usr/include/stdlib.h:483:16: missed:   not inlinable: main/47 -> strtol/54, function body not available
+ackermann.c:72:7: missed:   not inlinable: main/47 -> exit/48, function body not available
+ackermann.c:71:7: missed:   not inlinable: main/47 -> log_error/42, function not inlinable
+ackermann.c:65:15: missed:   not inlinable: ackermann/46 -> ackermann/46, function not inline candidate
+ackermann.c:65:15: missed:   not inlinable: ackermann/46 -> ackermann/46, function not inline candidate
+ackermann.c:64:27: missed:   not inlinable: ackermann/46 -> ackermann/46, function not inline candidate
+ackermann.c:57:1: missed:   not inlinable: log_info/45 -> __builtin_va_end/50, function body not available
+ackermann.c:57:1: missed:   not inlinable: log_info/45 -> print_log/40, function not inline candidate
+ackermann.c:57:1: missed:   not inlinable: log_info/45 -> __builtin_va_start/49, function body not available
+ackermann.c:54:1: missed:   not inlinable: log_error/42 -> __builtin_va_end/50, function body not available
+ackermann.c:54:1: missed:   not inlinable: log_error/42 -> print_log/40, function not inline candidate
+ackermann.c:54:1: missed:   not inlinable: log_error/42 -> __builtin_va_start/49, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:99:10: missed:   not inlinable: print_log/40 -> __vfprintf_chk/53, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available
+/usr/include/aarch64-linux-gnu/bits/stdio2.h:86:10: missed:   not inlinable: print_log/40 -> __printf_chk/51, function body not available

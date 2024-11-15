@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+
 extern int makeBorderNonOptimized(unsigned char *image, unsigned char *border, int cols, int rows, int threshold);
 extern int makeBorderOptimized(unsigned char *image, unsigned char *border, int cols, int rows, int threshold);
 

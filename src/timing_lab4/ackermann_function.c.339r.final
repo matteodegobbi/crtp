@@ -112,7 +112,7 @@ Dataflow summary:
      (nil))
 (call_insn 25 23 54 (parallel [
             (set (reg:SI 0 x0)
-                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf9a9b28fd600 ackermann>) [0 ackermann S8 A8])
+                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf3e677afd600 ackermann>) [0 ackermann S8 A8])
                     (const_int 0 [0])))
             (unspec:DI [
                     (const_int 0 [0])
@@ -157,7 +157,7 @@ Dataflow summary:
      (nil))
 (call_insn 37 36 39 (parallel [
             (set (reg:SI 0 x0)
-                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf9a9b28fd600 ackermann>) [0 ackermann S8 A8])
+                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf3e677afd600 ackermann>) [0 ackermann S8 A8])
                     (const_int 0 [0])))
             (unspec:DI [
                     (const_int 0 [0])
@@ -178,7 +178,7 @@ Dataflow summary:
      (nil))
 (call_insn 41 40 43 (parallel [
             (set (reg:SI 0 x0)
-                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf9a9b28fd600 ackermann>) [0 ackermann S8 A8])
+                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf3e677afd600 ackermann>) [0 ackermann S8 A8])
                     (const_int 0 [0])))
             (unspec:DI [
                     (const_int 0 [0])
@@ -277,7 +277,7 @@ Dataflow summary:
      (nil))
 (call_insn 7 6 16 (parallel [
             (set (reg:SI 0 x0)
-                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf9a9b28fd600 ackermann>) [0 ackermann S8 A8])
+                (call (mem:DI (symbol_ref:DI ("ackermann") [flags 0x3]  <function_decl 0xf3e677afd600 ackermann>) [0 ackermann S8 A8])
                     (const_int 0 [0])))
             (unspec:DI [
                     (const_int 0 [0])

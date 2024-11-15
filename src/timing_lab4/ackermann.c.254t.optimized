@@ -1,22 +1,99 @@
 
-;; Function log_error.constprop (log_error.constprop.0, funcdef_no=47, decl_uid=5789, cgraph_uid=62, symbol_order=63) (executed once)
+;; Function print_log (print_log, funcdef_no=6, decl_uid=5355, cgraph_uid=7, symbol_order=7)
 
-void log_error.constprop (const char * msg)
+void print_log (const char * format, error_level_t err_level, struct va_list args)
 {
-  struct __gnuc_va_list __ap;
-  struct va_list args;
-  struct va_list args;
-  struct FILE * stdout.2_7;
+  unsigned char log_level.0_1;
+  int _2;
 
-  <bb 2> [local count: 1073741824]:
+  <bb 2> :
+  log_level.0_1 = log_level;
+  if (err_level_6(D) < log_level.0_1)
+    goto <bb 3>; [INV]
+  else
+    goto <bb 4>; [INV]
+
+  <bb 3> :
+  // predicted unlikely by early return (on trees) predictor.
+  goto <bb 16>; [INV]
+
+  <bb 4> :
+  _2 = (int) err_level_6(D);
+  if (_2 == 4)
+    goto <bb 13>; [INV]
+  else
+    goto <bb 5>; [INV]
+
+  <bb 5> :
+  if (_2 > 4)
+    goto <bb 14>; [INV]
+  else
+    goto <bb 6>; [INV]
+
+  <bb 6> :
+  if (_2 == 3)
+    goto <bb 12>; [INV]
+  else
+    goto <bb 7>; [INV]
+
+  <bb 7> :
+  if (_2 > 3)
+    goto <bb 14>; [INV]
+  else
+    goto <bb 8>; [INV]
+
+  <bb 8> :
+  if (_2 == 1)
+    goto <bb 10>; [INV]
+  else
+    goto <bb 9>; [INV]
+
+  <bb 9> :
+  if (_2 == 2)
+    goto <bb 11>; [INV]
+  else
+    goto <bb 14>; [INV]
+
+  <bb 10> :
+  printf ("[FATAL ERROR] ");
+  goto <bb 15>; [INV]
+
+  <bb 11> :
+  printf ("[ERROR] ");
+  goto <bb 15>; [INV]
+
+  <bb 12> :
+  printf ("[WARNING] ");
+  goto <bb 15>; [INV]
+
+  <bb 13> :
+  printf ("[DEBUG] ");
+  goto <bb 15>; [INV]
+
+  <bb 14> :
+  printf ("[INFO] ");
+
+  <bb 15> :
+  vprintf (format_12(D), args);
+
+  <bb 16> :
+<L9>:
+  return;
+
+}
+
+
+
+;; Function log_error (log_error, funcdef_no=8, decl_uid=5369, cgraph_uid=9, symbol_order=9)
+
+void log_error (const char * msg)
+{
+  struct va_list args;
+
+  <bb 2> :
   __builtin_va_start (&args, 0);
-  args = args;
-  __printf_chk (2, "[ERROR] ");
-  __ap = args;
-  stdout.2_7 = stdout;
-  __vfprintf_chk (stdout.2_7, 2, "usage: %s n\n", __ap);
-  __ap ={v} {CLOBBER(eol)};
-  args ={v} {CLOBBER(eol)};
+  print_log (msg_3(D), 2, args);
+  __builtin_va_end (&args);
   args ={v} {CLOBBER(eol)};
   return;
 
@@ -24,24 +101,16 @@ void log_error.constprop (const char * msg)
 
 
 
-;; Function log_info.constprop (log_info.constprop.0, funcdef_no=48, decl_uid=5788, cgraph_uid=61, symbol_order=62)
+;; Function log_info (log_info, funcdef_no=11, decl_uid=5381, cgraph_uid=12, symbol_order=12)
 
-void log_info.constprop (const char * msg)
+void log_info (const char * msg)
 {
-  struct __gnuc_va_list __ap;
   struct va_list args;
-  struct va_list args;
-  struct FILE * stdout.2_7;
 
-  <bb 2> [local count: 1073741824]:
+  <bb 2> :
   __builtin_va_start (&args, 0);
-  args = args;
-  __printf_chk (2, "[INFO] ");
-  __ap = args;
-  stdout.2_7 = stdout;
-  __vfprintf_chk (stdout.2_7, 2, "count: %d\n", __ap);
-  __ap ={v} {CLOBBER(eol)};
-  args ={v} {CLOBBER(eol)};
+  print_log (msg_3(D), 5, args);
+  __builtin_va_end (&args);
   args ={v} {CLOBBER(eol)};
   return;
 
@@ -49,578 +118,152 @@ void log_info.constprop (const char * msg)
 
 
 
-;; Function ackermann (ackermann, funcdef_no=45, decl_uid=5706, cgraph_uid=46, symbol_order=46)
+;; Function ackermann (ackermann, funcdef_no=12, decl_uid=5386, cgraph_uid=13, symbol_order=13)
 
-Removing basic block 39
-Removing basic block 40
-Removing basic block 41
-Removing basic block 42
-Removing basic block 43
-Removing basic block 44
-Removing basic block 45
-Removing basic block 46
-Removing basic block 47
-Removing basic block 48
-Removing basic block 49
-Removing basic block 50
-Removing basic block 51
-Removing basic block 52
-Removing basic block 53
-Removing basic block 54
-Removing basic block 55
-Removing basic block 56
-Removing basic block 57
-Removing basic block 58
-Removing basic block 59
 int ackermann (int m, int n)
 {
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int m;
-  int n;
-  int _3;
-  int _7;
-  int _8;
-  int _11;
-  int _14;
-  int _15;
-  int _16;
-  int _17;
-  int _20;
-  int _26;
-  int _29;
-  int _35;
-  int _38;
-  int _44;
-  int _47;
-  int _53;
-  int _56;
-  int _57;
-  int _62;
-  int _65;
-  int _66;
-  int _71;
-  int _74;
-  int _80;
-  int _83;
-  int _84;
-  int _91;
-  int _92;
-
-  <bb 2> [local count: 236223198]:
-  if (m_12(D) == 0)
-    goto <bb 4>; [22.00%]
-  else
-    goto <bb 5>; [78.00%]
-
-  <bb 3> [local count: 837518743]:
-  # n_10 = PHI <1(5), _17(8)>
-  if (_91 == 0)
-    goto <bb 4>; [22.00%]
-  else
-    goto <bb 5>; [78.00%]
-
-  <bb 4> [local count: 236223226]:
-  # n_99 = PHI <n_10(3), n_13(D)(2)>
-  _11 = n_99 + 1;
-  return _11;
-
-  <bb 5> [local count: 837518715]:
-  # m_98 = PHI <_91(3), m_12(D)(2)>
-  # n_100 = PHI <n_10(3), n_13(D)(2)>
-  _91 = m_98 + -1;
-  if (n_100 == 0)
-    goto <bb 3>; [67.00%]
-  else
-    goto <bb 6>; [33.00%]
-
-  <bb 6> [local count: 276381177]:
-  _3 = n_100 + -1;
-  goto <bb 9>; [100.00%]
-
-  <bb 7> [local count: 979897015]:
-  # n_31 = PHI <_26(12), 1(9)>
-  if (_7 == 0)
-    goto <bb 8>; [22.00%]
-  else
-    goto <bb 9>; [78.00%]
-
-  <bb 8> [local count: 276381201]:
-  _17 = n_31 + 1;
-  goto <bb 3>; [100.00%]
-
-  <bb 9> [local count: 979896991]:
-  # m_103 = PHI <_7(7), m_98(6)>
-  # n_105 = PHI <n_31(7), _3(6)>
-  _7 = m_103 + -1;
-  if (n_105 == 0)
-    goto <bb 7>; [67.00%]
-  else
-    goto <bb 10>; [33.00%]
-
-  <bb 10> [local count: 323366006]:
-  _20 = n_105 + -1;
-  goto <bb 13>; [100.00%]
-
-  <bb 11> [local count: 1146479592]:
-  # n_40 = PHI <_35(16), 1(13)>
-  if (_8 == 0)
-    goto <bb 12>; [22.00%]
-  else
-    goto <bb 13>; [78.00%]
-
-  <bb 12> [local count: 323366031]:
-  _26 = n_40 + 1;
-  goto <bb 7>; [100.00%]
-
-  <bb 13> [local count: 1146479571]:
-  # m_106 = PHI <_8(11), m_103(10)>
-  # n_108 = PHI <n_40(11), _20(10)>
-  _8 = m_106 + -1;
-  if (n_108 == 0)
-    goto <bb 11>; [67.00%]
-  else
-    goto <bb 14>; [33.00%]
-
-  <bb 14> [local count: 378338255]:
-  _29 = n_108 + -1;
-  goto <bb 17>; [100.00%]
-
-  <bb 15> [local count: 1341381199]:
-  # n_49 = PHI <_44(20), 1(17)>
-  if (_14 == 0)
-    goto <bb 16>; [22.00%]
-  else
-    goto <bb 17>; [78.00%]
-
-  <bb 16> [local count: 378338280]:
-  _35 = n_49 + 1;
-  goto <bb 11>; [100.00%]
-
-  <bb 17> [local count: 1341381178]:
-  # m_109 = PHI <_14(15), m_106(14)>
-  # n_111 = PHI <n_49(15), _29(14)>
-  _14 = m_109 + -1;
-  if (n_111 == 0)
-    goto <bb 15>; [67.00%]
-  else
-    goto <bb 18>; [33.00%]
-
-  <bb 18> [local count: 442655785]:
-  _38 = n_111 + -1;
-  goto <bb 21>; [100.00%]
-
-  <bb 19> [local count: 1569416067]:
-  # n_58 = PHI <_53(24), 1(21)>
-  if (_57 == 0)
-    goto <bb 20>; [22.00%]
-  else
-    goto <bb 21>; [78.00%]
-
-  <bb 20> [local count: 442655806]:
-  _44 = n_58 + 1;
-  goto <bb 15>; [100.00%]
-
-  <bb 21> [local count: 1569416043]:
-  # m_112 = PHI <_57(19), m_109(18)>
-  # n_114 = PHI <n_58(19), _38(18)>
-  _57 = m_112 + -1;
-  if (n_114 == 0)
-    goto <bb 19>; [67.00%]
-  else
-    goto <bb 22>; [33.00%]
-
-  <bb 22> [local count: 517907293]:
-  _47 = n_114 + -1;
-  goto <bb 25>; [100.00%]
-
-  <bb 23> [local count: 1836216853]:
-  # n_67 = PHI <_62(28), 1(25)>
-  if (_92 == 0)
-    goto <bb 24>; [22.00%]
-  else
-    goto <bb 25>; [78.00%]
-
-  <bb 24> [local count: 517907311]:
-  _53 = n_67 + 1;
-  goto <bb 19>; [100.00%]
-
-  <bb 25> [local count: 1836216836]:
-  # m_115 = PHI <_92(23), m_112(22)>
-  # n_117 = PHI <n_67(23), _47(22)>
-  _92 = m_115 + -1;
-  if (n_117 == 0)
-    goto <bb 23>; [67.00%]
-  else
-    goto <bb 26>; [33.00%]
-
-  <bb 26> [local count: 605951552]:
-  _56 = n_117 + -1;
-  goto <bb 29>; [100.00%]
-
-  <bb 27> [local count: 2148373775]:
-  # n_76 = PHI <_71(32), 1(29)>
-  if (_15 == 0)
-    goto <bb 28>; [22.00%]
-  else
-    goto <bb 29>; [78.00%]
-
-  <bb 28> [local count: 605951569]:
-  _62 = n_76 + 1;
-  goto <bb 23>; [100.00%]
-
-  <bb 29> [local count: 2148373758]:
-  # m_118 = PHI <_15(27), m_115(26)>
-  # n_120 = PHI <n_76(27), _56(26)>
-  _15 = m_118 + -1;
-  if (n_120 == 0)
-    goto <bb 27>; [67.00%]
-  else
-    goto <bb 30>; [33.00%]
-
-  <bb 30> [local count: 708963334]:
-  _65 = n_120 + -1;
-  goto <bb 33>; [100.00%]
-
-  <bb 31> [local count: 2513597358]:
-  # n_85 = PHI <_80(36), 1(33)>
-  if (_16 == 0)
-    goto <bb 32>; [22.00%]
-  else
-    goto <bb 33>; [78.00%]
-
-  <bb 32> [local count: 708963348]:
-  _71 = n_85 + 1;
-  goto <bb 27>; [100.00%]
-
-  <bb 33> [local count: 2513597344]:
-  # m_121 = PHI <_16(31), m_118(30)>
-  # n_123 = PHI <n_85(31), _65(30)>
-  _16 = m_121 + -1;
-  if (n_123 == 0)
-    goto <bb 31>; [67.00%]
-  else
-    goto <bb 34>; [33.00%]
-
-  <bb 34> [local count: 829487118]:
-  _74 = n_123 + -1;
-  goto <bb 37>; [100.00%]
-
-  <bb 35> [local count: 2940908927]:
-  # n_39 = PHI <_84(38), 1(37)>
-  if (_66 == 0)
-    goto <bb 36>; [22.00%]
-  else
-    goto <bb 37>; [78.00%]
-
-  <bb 36> [local count: 829487125]:
-  _80 = n_39 + 1;
-  goto <bb 31>; [100.00%]
-
-  <bb 37> [local count: 2940908920]:
-  # m_124 = PHI <_66(35), m_121(34)>
-  # n_126 = PHI <n_39(35), _74(34)>
-  _66 = m_124 + -1;
-  if (n_126 == 0)
-    goto <bb 35>; [67.00%]
-  else
-    goto <bb 38>; [33.00%]
-
-  <bb 38> [local count: 212600879]:
-  _83 = n_126 + -1;
-  _84 = ackermann (m_124, _83);
-  goto <bb 35>; [100.00%]
-
-}
-
-
-
-;; Function main (main, funcdef_no=46, decl_uid=5710, cgraph_uid=47, symbol_order=47) (executed once)
-
-Removing basic block 33
-Removing basic block 34
-Removing basic block 35
-Removing basic block 36
-Removing basic block 37
-Removing basic block 38
-Removing basic block 39
-Removing basic block 40
-Removing basic block 41
-Removing basic block 42
-Removing basic block 43
-Removing basic block 44
-Removing basic block 45
-Removing basic block 46
-Removing basic block 47
-Removing basic block 48
-Removing basic block 49
-Removing basic block 50
-Removing basic block 51
-Removing basic block 52
-Removing basic block 53
-Removing basic block 54
-int main (int argc, char * * argv)
-{
-  int m;
-  int n;
-  int m;
-  int n;
-  int n;
-  int m;
-  int n;
-  int m;
-  int m;
-  int n;
-  int total;
-  int count;
-  char * _1;
-  char * _2;
+  int D.5407;
+  int _1;
+  int _2;
   int _3;
   int _4;
   int _5;
-  unsigned int ivtmp_6;
-  int _7;
-  int _8;
-  unsigned int ivtmp_18;
-  int _20;
-  long int _21;
-  int _26;
-  int _27;
-  int _28;
-  int _31;
-  int _32;
-  unsigned int ivtmp_39;
-  int _40;
-  unsigned int ivtmp_54;
-  int _55;
-  int _58;
-  unsigned int ivtmp_63;
-  int _64;
-  int _67;
-  int _68;
-  unsigned int ivtmp_70;
-  int _71;
-  int _81;
-  int _82;
-  unsigned int ivtmp_84;
-  int _85;
-  int _86;
+  int _12;
+  int _14;
+  int _15;
 
-  <bb 2> [local count: 118158864]:
-  if (argc_9(D) <= 1)
-    goto <bb 3>; [0.04%]
+  <bb 2> :
+  if (m_7(D) == 0)
+    goto <bb 3>; [INV]
   else
-    goto <bb 4>; [99.96%]
+    goto <bb 4>; [INV]
 
-  <bb 3> [local count: 47266]:
-  _1 = *argv_10(D);
-  log_error.constprop ("usage: %s n\n", _1);
+  <bb 3> :
+  _15 = n_8(D) + 1;
+  // predicted unlikely by early return (on trees) predictor.
+  goto <bb 7>; [INV]
+
+  <bb 4> :
+  if (n_8(D) == 0)
+    goto <bb 5>; [INV]
+  else
+    goto <bb 6>; [INV]
+
+  <bb 5> :
+  _1 = m_7(D) + -1;
+  _14 = ackermann (_1, 1);
+  // predicted unlikely by early return (on trees) predictor.
+  goto <bb 7>; [INV]
+
+  <bb 6> :
+  _2 = m_7(D) + -1;
+  _3 = n_8(D) + -1;
+  _4 = ackermann (m_7(D), _3);
+  _12 = ackermann (_2, _4);
+  // predicted unlikely by early return (on trees) predictor.
+
+  <bb 7> :
+  # _5 = PHI <_15(3), _14(5), _12(6)>
+<L4>:
+  return _5;
+
+}
+
+
+
+;; Function main (main, funcdef_no=13, decl_uid=5390, cgraph_uid=14, symbol_order=14)
+
+int main (int argc, char * * argv)
+{
+  int d2;
+  int d1;
+  int multiplied;
+  int total;
+  int count;
+  int n;
+  int D.5419;
+  int D.5416;
+  int D.5415;
+  char * _1;
+  char * * _2;
+  char * _3;
+  int _4;
+  unsigned int count.1_5;
+  unsigned int _6;
+  int _19;
+  int _24;
+  int _27;
+
+  <bb 2> :
+  if (argc_12(D) <= 1)
+    goto <bb 3>; [INV]
+  else
+    goto <bb 4>; [INV]
+
+  <bb 3> :
+  _1 = *argv_13(D);
+  log_error ("usage: %s n\n", _1);
   exit (1);
 
-  <bb 4> [local count: 118111603]:
-  _2 = MEM[(char * *)argv_10(D) + 8B];
-  _21 = strtol (_2, 0B, 10);
-  _20 = (int) _21;
-  if (_20 > 0)
-    goto <bb 5>; [89.00%]
+  <bb 4> :
+  _2 = argv_13(D) + 8;
+  _3 = *_2;
+  n_15 = atoi (_3);
+  count_16 = 0;
+  total_17 = 0;
+  multiplied_18 = 0;
+  goto <bb 10>; [INV]
+
+  <bb 5> :
+  count_20 = count_7 + 1;
+  multiplied_21 = multiplied_9 * count_20;
+  if (multiplied_21 <= 99)
+    goto <bb 6>; [INV]
   else
-    goto <bb 31>; [11.00%]
+    goto <bb 7>; [INV]
 
-  <bb 5> [local count: 105119327]:
-  _8 = _20 + 1;
+  <bb 6> :
+  log_info ("count: %d\n", count_20);
 
-  <bb 6> [local count: 955630674]:
-  # count_47 = PHI <count_13(30), 0(5)>
-  # total_52 = PHI <total_33(30), 0(5)>
-  count_13 = count_47 + 1;
-  log_info.constprop ("count: %d\n", count_13);
-  goto <bb 9>; [100.00%]
-
-  <bb 7> [local count: 2270057292]:
-  # n_60 = PHI <_64(13), 1(9)>
-  # ivtmp_70 = PHI <ivtmp_54(13), ivtmp_18(9)>
-  ivtmp_6 = ivtmp_70 + 4294967295;
-  if (ivtmp_6 == 0)
-    goto <bb 8>; [22.00%]
+  <bb 7> :
+  _24 = ackermann (2, 2);
+  total_25 = _24 + total_8;
+  _27 = ackermann (multiplied_21, n_15);
+  total_28 = _27 + total_25;
+  d1_30 = ackermann (n_15, 1);
+  _4 = d1_30 * multiplied_21;
+  total_31 = total_28 + _4;
+  d2_33 = ackermann (n_15, count_20);
+  count.1_5 = (unsigned int) count_20;
+  _6 = count.1_5 & 1;
+  if (_6 == 0)
+    goto <bb 8>; [INV]
   else
-    goto <bb 9>; [78.00%]
+    goto <bb 9>; [INV]
 
-  <bb 8> [local count: 955630707]:
-  # n_53 = PHI <n_60(7), 2(12), 2(16)>
-  _55 = n_53 + 1;
-  total_16 = total_52 + _55;
-  total_19 = _8 + total_16;
-  goto <bb 19>; [100.00%]
+  <bb 8> :
+  total_34 = total_31 + d2_33;
 
-  <bb 9> [local count: 2516036618]:
-  # m_90 = PHI <1(7), 2(6)>
-  # n_92 = PHI <n_60(7), 2(6)>
-  # ivtmp_18 = PHI <ivtmp_6(7), 2(6)>
-  if (n_92 == 0)
-    goto <bb 7>; [89.04%]
+  <bb 9> :
+  # count_37 = PHI <count_20(8), count_20(7)>
+  # total_38 = PHI <total_34(8), total_31(7)>
+  # multiplied_39 = PHI <multiplied_21(8), multiplied_21(7)>
+
+  <bb 10> :
+  # count_7 = PHI <count_37(9), count_16(4)>
+  # total_8 = PHI <total_38(9), total_17(4)>
+  # multiplied_9 = PHI <multiplied_39(9), multiplied_18(4)>
+  if (count_7 < n_15)
+    goto <bb 5>; [INV]
   else
-    goto <bb 11>; [10.96%]
+    goto <bb 11>; [INV]
 
-  <bb 10> [local count: 872108577]:
-  # ivtmp_39 = PHI <ivtmp_63(12), ivtmp_84(16)>
+  <bb 11> :
+  _19 = total_8;
 
-  <bb 11> [local count: 1118087907]:
-  # ivtmp_54 = PHI <ivtmp_39(10), ivtmp_18(9)>
-  # m_74 = PHI <1(10), m_90(9)>
-  # n_79 = PHI <2(10), n_92(9)>
-  _58 = n_79 + -1;
-  _81 = m_74 + -1;
-  if (_58 == 0)
-    goto <bb 32>; [67.00%]
-  else
-    goto <bb 17>; [33.00%]
-
-  <bb 12> [local count: 0]:
-  ivtmp_63 = ivtmp_54 + 4294967295;
-  if (ivtmp_63 == 0)
-    goto <bb 8>; [22.00%]
-  else
-    goto <bb 10>; [78.00%]
-
-  <bb 13> [local count: 0]:
-  # n_96 = PHI <_68(17), _71(15)>
-  _64 = n_96 + 1;
-  goto <bb 7>; [100.00%]
-
-  <bb 14> [local count: 2392245614]:
-  if (_68 == 0)
-    goto <bb 16>; [86.60%]
-  else
-    goto <bb 15>; [13.40%]
-
-  <bb 15> [local count: 320591310]:
-  _3 = _68 + -1;
-  _71 = ackermann (1, _3);
-  goto <bb 13>; [100.00%]
-
-  <bb 16> [local count: 2071654308]:
-  ivtmp_84 = ivtmp_54 + 4294967295;
-  if (ivtmp_84 == 0)
-    goto <bb 8>; [22.00%]
-  else
-    goto <bb 10>; [78.00%]
-
-  <bb 17> [local count: 1068744740]:
-  # n_56 = PHI <_58(11), _81(32)>
-  # m_50 = PHI <m_74(11), _81(32)>
-  # _4 = PHI <_81(11), _58(32)>
-  _67 = n_56 + -1;
-  _68 = ackermann (m_50, _67);
-  if (_4 == 0)
-    goto <bb 13>; [1.73%]
-  else
-    goto <bb 14>; [98.27%]
-
-  <bb 18> [local count: 3388145333]:
-  # n_34 = PHI <_82(22), 1(19)>
-  if (_26 == 0)
-    goto <bb 27>; [22.00%]
-  else
-    goto <bb 19>; [78.00%]
-
-  <bb 19> [local count: 3388145314]:
-  # m_44 = PHI <_26(18), _20(8)>
-  # n_45 = PHI <n_34(18), 1(8)>
-  _26 = m_44 + -1;
-  if (n_45 == 0)
-    goto <bb 18>; [67.00%]
-  else
-    goto <bb 20>; [33.00%]
-
-  <bb 20> [local count: 1118087945]:
-  _40 = n_45 + -1;
-  goto <bb 23>; [100.00%]
-
-  <bb 21> [local count: 3964130058]:
-  # n_43 = PHI <_86(24), 1(23)>
-  if (_27 == 0)
-    goto <bb 22>; [22.00%]
-  else
-    goto <bb 23>; [78.00%]
-
-  <bb 22> [local count: 1118087955]:
-  _82 = n_43 + 1;
-  goto <bb 18>; [100.00%]
-
-  <bb 23> [local count: 3964130058]:
-  # m_95 = PHI <_27(21), m_44(20)>
-  # n_97 = PHI <n_43(21), _40(20)>
-  _27 = m_95 + -1;
-  if (n_97 == 0)
-    goto <bb 21>; [67.00%]
-  else
-    goto <bb 24>; [33.00%]
-
-  <bb 24> [local count: 1308162912]:
-  _85 = n_97 + -1;
-  _86 = ackermann (m_95, _85);
-  goto <bb 21>; [100.00%]
-
-  <bb 25> [local count: 3388145349]:
-  # n_88 = PHI <_32(28), 1(27)>
-  if (_5 == 0)
-    goto <bb 26>; [22.00%]
-  else
-    goto <bb 27>; [78.00%]
-
-  <bb 26> [local count: 955630731]:
-  _7 = count_13 & 1;
-  if (_7 == 0)
-    goto <bb 29>; [50.00%]
-  else
-    goto <bb 30>; [50.00%]
-
-  <bb 27> [local count: 3388145342]:
-  # m_59 = PHI <_5(25), _20(18)>
-  # n_15 = PHI <n_88(25), count_13(18)>
-  _5 = m_59 + -1;
-  if (n_15 == 0)
-    goto <bb 25>; [67.00%]
-  else
-    goto <bb 28>; [33.00%]
-
-  <bb 28> [local count: 1118087955]:
-  _31 = n_15 + -1;
-  _32 = ackermann (m_59, _31);
-  goto <bb 25>; [100.00%]
-
-  <bb 29> [local count: 477815368]:
-  _28 = n_88 + 1;
-  total_23 = total_19 + _28;
-
-  <bb 30> [local count: 955630734]:
-  # total_33 = PHI <total_19(26), total_23(29)>
-  if (count_13 != _20)
-    goto <bb 6>; [89.00%]
-  else
-    goto <bb 31>; [11.00%]
-
-  <bb 31> [local count: 118111655]:
-  # total_51 = PHI <total_33(30), 0(4)>
-  return total_51;
-
-  <bb 32> [local count: 749118900]:
-  if (_81 == 0)
-    goto <bb 12>; [6.59%]
-  else
-    goto <bb 17>; [93.41%]
+  <bb 12> :
+<L9>:
+  return _19;
 
 }
 

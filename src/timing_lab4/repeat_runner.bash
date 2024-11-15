@@ -7,7 +7,7 @@ output_file="output.txt"
 > "$output_file"
 
 # Loop 1000 times
-for i in {1..1000}; do
+for i in {1..10000}; do
   # Run the program and append its output to the file
   ./test_gradient ackermann_function_optimized.png asd.png 1 >> "$output_file"
 done

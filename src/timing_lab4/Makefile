@@ -3,7 +3,7 @@
 ##
 ## OPTIMIZATION FLAGS
 ##
-CFLAGS = -O3
+CFLAGS = -O0
 #CFLAGS += -fdump-passes # add this to show active optimization passes
 
 all: ackermann test_gradient ackermann_function.o
