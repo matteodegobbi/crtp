@@ -1,7 +1,7 @@
 
 
 
-all: threads process print_segments
+all: threads process print_segments processes_benchmark
 
 print_segments: print_segments.o
 	$(LINK.o) $^ -o $@
@@ -10,6 +10,9 @@ threads_example: threads_example.o
 	$(LINK.o) $^ -o $@ -lpthread
 
 process_example: process_example.o
+	$(LINK.o) $^ -o $@
+
+processes_benchmark: processes_benchmark.o
 	$(LINK.o) $^ -o $@
 
 .SUFFIXES: .pix .png .csv

@@ -4,6 +4,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/wait.h>
+#include <time.h>
+#include <bits/time.h>
 
 #include <unistd.h> // fork()
 
@@ -36,7 +38,7 @@ static void processRoutine()
 {
   int i, j;
   long sum = 0;
-  printf("I'm working on process %d: pid = %d\n", currProcessIdx, getpid());
+  //printf("I'm working on process %d: pid = %d\n", currProcessIdx, getpid());
 /* processArgs is the pointer to the shared memory inherited by the
    parent process. processArg[currProcessIdx] is the argument
    structure specific to the child process */
@@ -45,7 +47,7 @@ static void processRoutine()
       sum += bigMatrix[(processArgs[currProcessIdx].startRow + i) * COLS + j];
 /* Report the computed sum into the argument structure */
   processArgs[currProcessIdx].partialSum = sum;
-  PAUSE
+  //PAUSE
 }
 
 
@@ -65,7 +67,7 @@ int main(int argc, char *args[])
   }
   sscanf(args[1], "%d", &nProcesses);
 
-  printf("Parent pid: %d\n", getpid());
+  //printf("Parent pid: %d\n", getpid());
 /* Create a shared memory segment to contain the argument structures
    for all child processes. Set Read/Write permission in flags argument. */
   memId = shmget(IPC_PRIVATE, nProcesses * sizeof(struct argument), 0666);
@@ -107,6 +109,8 @@ int main(int argc, char *args[])
   }
 
 
+  struct timespec t_start, t_end;
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t_start);
 /* Spawn child processes */
   for(currProcessIdx = 0; currProcessIdx < nProcesses; currProcessIdx++)
   {
@@ -129,5 +133,9 @@ int main(int argc, char *args[])
     waitpid(pids[currProcessIdx], NULL, 0);
     totalSum += processArgs[currProcessIdx].partialSum;
   }
+
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t_end);
+  double t_process_us = (t_end.tv_sec - t_start.tv_sec) * 1e6 + (t_end.tv_nsec - t_start.tv_nsec) / 1e3;
+  printf("%lf",t_process_us);
 
 }
